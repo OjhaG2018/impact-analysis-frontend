@@ -1,0 +1,104 @@
+import React, { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import api, { endpoints } from '../api';
+import { InterviewResponse, InterviewStatus, PaginatedResponse } from '../types';
+import { Card, Button, Badge, DataTable } from '../components/ui';
+
+const InterviewsPage: React.FC = () => {
+  const [interviews, setInterviews] = useState<InterviewResponse[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    loadInterviews();
+  }, []);
+
+  const loadInterviews = async () => {
+    try {
+      const data = await api.get<PaginatedResponse<InterviewResponse> | InterviewResponse[]>(
+        endpoints.interviews
+      );
+      setInterviews(Array.isArray(data) ? data : data.results);
+    } catch (error) {
+      console.error('Error loading interviews:', error);
+    }
+    setLoading(false);
+  };
+
+  const getStatusBadge = (status: InterviewStatus): React.ReactNode => {
+    const variants: Record<InterviewStatus, 'default' | 'success' | 'warning' | 'danger' | 'info'> = {
+      draft: 'default',
+      in_progress: 'warning',
+      submitted: 'info',
+      reviewed: 'info',
+      approved: 'success',
+      rejected: 'danger'
+    };
+    return <Badge variant={variants[status]}>{status.replace('_', ' ')}</Badge>;
+  };
+
+  const columns = [
+    { key: 'beneficiary_name' as const, label: 'Beneficiary' },
+    { key: 'project_code' as const, label: 'Project' },
+    { key: 'interviewer_name' as const, label: 'Interviewer' },
+    { key: 'interview_date' as const, label: 'Date' },
+    { 
+      key: 'status' as const, 
+      label: 'Status',
+      render: (val: unknown) => getStatusBadge(val as InterviewStatus)
+    },
+    { 
+      key: 'impact_score' as const, 
+      label: 'Score',
+      render: (val: unknown) => val ? (
+        <span className="font-semibold text-emerald-600">{`${val}/5`}</span>
+      ) : <span>-</span>
+    },
+  ];
+
+  const submitted = interviews.filter(i => i.status === 'submitted').length;
+  const approved = interviews.filter(i => i.status === 'approved').length;
+  const avgScore = interviews.filter(i => i.impact_score).length > 0
+    ? (interviews.reduce((acc, i) => acc + (i.impact_score || 0), 0) / 
+       interviews.filter(i => i.impact_score).length).toFixed(1)
+    : '-';
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Interviews</h1>
+          <p className="text-gray-500 mt-1">View and manage interview responses</p>
+        </div>
+        <Button>
+          <Plus className="w-4 h-4" /> New Interview
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="p-4">
+          <p className="text-sm text-gray-500">Total Interviews</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{interviews.length}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-gray-500">Pending Review</p>
+          <p className="text-2xl font-bold text-amber-600 mt-1">{submitted}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-gray-500">Approved</p>
+          <p className="text-2xl font-bold text-emerald-600 mt-1">{approved}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-gray-500">Avg. Score</p>
+          <p className="text-2xl font-bold text-blue-600 mt-1">{avgScore}</p>
+        </Card>
+      </div>
+
+      <Card className="p-4">
+        <DataTable columns={columns} data={interviews} loading={loading} />
+      </Card>
+    </div>
+  );
+};
+
+export default InterviewsPage;

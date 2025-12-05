@@ -1,0 +1,195 @@
+import { AuthTokens, PaginatedResponse } from '../types';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+class ApiService {
+  private getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  private getHeaders(includeAuth: boolean = true): HeadersInit {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    if (includeAuth) {
+      const token = this.getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
+    return headers;
+  }
+
+  private async handleResponse<T>(response: Response): Promise<T> {
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
+      const err: any = new Error(error.detail || error.error || 'Request failed');
+      err.response = { data: error, status: response.status };
+      throw err;
+    }
+    
+    // Handle empty responses (204 No Content)
+    if (response.status === 204) {
+      return {} as T;
+    }
+    
+    return response.json();
+  }
+
+  // Auth endpoints
+  async login(username: string, password: string): Promise<AuthTokens> {
+    const response = await fetch(`${API_BASE_URL}/token/`, {
+      method: 'POST',
+      headers: this.getHeaders(false),
+      body: JSON.stringify({ username, password }),
+    });
+    return this.handleResponse<AuthTokens>(response);
+  }
+
+  async refreshToken(refresh: string): Promise<{ access: string }> {
+    const response = await fetch(`${API_BASE_URL}/token/refresh/`, {
+      method: 'POST',
+      headers: this.getHeaders(false),
+      body: JSON.stringify({ refresh }),
+    });
+    return this.handleResponse<{ access: string }>(response);
+  }
+
+  // Generic CRUD methods
+  async get<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async post<T, D = unknown>(endpoint: string, data: D): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async patch<T, D = unknown>(endpoint: string, data: D): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PATCH',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async put<T, D = unknown>(endpoint: string, data: D): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async delete(endpoint: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Delete failed' }));
+      throw new Error(error.detail || 'Delete failed');
+    }
+  }
+
+  // File upload
+  async uploadFile<T>(endpoint: string, formData: FormData): Promise<T> {
+    const token = this.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  // Download file
+  async downloadFile(endpoint: string, filename: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Download failed');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
+}
+
+export const api = new ApiService();
+
+// Typed API endpoints
+export const endpoints = {
+  // Core
+  currentUser: '/core/me/',
+  users: '/core/users/',
+  fieldResources: '/core/users/field_resources/',
+  availableResources: '/core/users/available_resources/',
+  dashboardStats: '/core/dashboard-stats/',
+  changePassword: '/core/change-password/',
+  organizations: '/core/organizations/',
+  auditLogs: '/core/audit-logs/',
+
+  // Projects
+  projects: '/projects/',
+  clients: '/projects/clients/',
+  beneficiaries: '/projects/beneficiaries/',
+  projectDocuments: '/projects/documents/',
+  
+  // Questionnaires
+  templates: '/questionnaires/templates/',
+  sections: '/questionnaires/sections/',
+  questions: '/questionnaires/questions/',
+  projectQuestionnaires: '/questionnaires/project-questionnaires/',
+
+  // Resources
+  assignments: '/resources/assignments/',
+  beneficiaryAssignments: '/resources/beneficiary-assignments/',
+  attendance: '/resources/attendance/',
+  expenses: '/resources/expenses/',
+
+  // Responses
+  interviews: '/responses/interviews/',
+  answers: '/responses/answers/',
+  media: '/responses/media/',
+
+  // Analytics
+  reports: '/analytics/reports/',
+  projectAnalytics: (id: number) => `/analytics/project/${id}/`,
+  questionAnalytics: (projectId: number, questionId: number) => 
+    `/analytics/project/${projectId}/question/${questionId}/`,
+  crossTab: (id: number) => `/analytics/project/${id}/cross-tab/`,
+  exportData: (id: number) => `/analytics/project/${id}/export/`,
+  compareProjects: '/analytics/compare/',
+};
+
+export default api;

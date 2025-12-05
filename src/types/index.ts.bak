@@ -1,0 +1,467 @@
+// ============== API TYPES ==============
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'manager' | 'analyst' | 'field_resource' | 'client';
+  role_display: string;
+  organization: number | null;
+  organization_name: string | null;
+  phone: string;
+  profile_photo: string | null;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  aadhar_number: string;
+  bank_account: string;
+  ifsc_code: string;
+  daily_rate: number | null;
+  education: string;
+  languages_known: string;
+  experience_years: number;
+  is_available: boolean;
+  is_active: boolean;
+  joined_date: string | null;
+  date_joined: string;
+}
+
+export interface Organization {
+  id: number;
+  name: string;
+  description: string;
+  logo: string | null;
+  address: string;
+  contact_email: string;
+  contact_phone: string;
+  website: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  user_count: number;
+}
+
+export interface Client {
+  id: number;
+  name: string;
+  organization_type: string;
+  description: string;
+  logo: string | null;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  contact_person: string;
+  contact_email: string;
+  contact_phone: string;
+  website: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  project_count: number;
+}
+
+export interface Project {
+  id: number;
+  title: string;
+  code: string;
+  description: string;
+  objectives: string;
+  client: number;
+  client_name: string;
+  sector: string;
+  sector_display: string;
+  status: ProjectStatus;
+  status_display: string;
+  states: string;
+  districts: string;
+  total_beneficiaries: number;
+  sample_size: number;
+  sample_percentage: number;
+  beneficiary_type: string;
+  grant_start_date: string | null;
+  grant_end_date: string | null;
+  assessment_start_date: string | null;
+  assessment_end_date: string | null;
+  grant_amount: number | null;
+  assessment_budget: number | null;
+  project_manager: number | null;
+  project_manager_name: string | null;
+  created_by: number | null;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+  completion_percentage: number;
+  beneficiary_count?: number;
+  sampled_count?: number;
+  interviewed_count?: number;
+}
+
+export type ProjectStatus = 
+  | 'draft' 
+  | 'planning' 
+  | 'in_progress' 
+  | 'data_collection' 
+  | 'analysis' 
+  | 'reporting' 
+  | 'completed' 
+  | 'on_hold';
+
+export type ProjectSector = 
+  | 'education' 
+  | 'health' 
+  | 'livelihood' 
+  | 'agriculture' 
+  | 'water_sanitation' 
+  | 'women_empowerment' 
+  | 'skill_development' 
+  | 'microfinance' 
+  | 'housing' 
+  | 'environment' 
+  | 'digital_literacy' 
+  | 'other';
+
+export interface Beneficiary {
+  id: number;
+  project: number;
+  beneficiary_id: string;
+  name: string;
+  father_husband_name: string;
+  gender: 'male' | 'female' | 'other';
+  gender_display: string;
+  age: number | null;
+  phone: string;
+  village: string;
+  block: string;
+  district: string;
+  state: string;
+  pincode: string;
+  category: string;
+  bpl_status: boolean;
+  occupation: string;
+  annual_income: number | null;
+  grant_amount_received: number | null;
+  grant_received_date: string | null;
+  grant_purpose: string;
+  is_sampled: boolean;
+  is_interviewed: boolean;
+  additional_data: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuestionnaireTemplate {
+  id: number;
+  name: string;
+  description: string;
+  sector: string;
+  sector_display: string;
+  version: string;
+  is_active: boolean;
+  is_default: boolean;
+  created_by: number | null;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+  section_count: number;
+  question_count: number;
+  sections?: QuestionnaireSection[];
+}
+
+export interface QuestionnaireSection {
+  id: number;
+  template: number;
+  title: string;
+  description: string;
+  order: number;
+  questions: Question[];
+  question_count: number;
+}
+
+export interface Question {
+  id: number;
+  section: number;
+  text: string;
+  help_text: string;
+  question_type: QuestionType;
+  question_type_display: string;
+  options: string[];
+  validation_rules: Record<string, unknown>;
+  is_required: boolean;
+  depends_on: number | null;
+  depends_on_value: string;
+  order: number;
+  scoring_weight: number;
+}
+
+export type QuestionType = 
+  | 'text' 
+  | 'textarea' 
+  | 'number' 
+  | 'decimal' 
+  | 'date' 
+  | 'time' 
+  | 'datetime' 
+  | 'single_choice' 
+  | 'multiple_choice' 
+  | 'dropdown' 
+  | 'rating' 
+  | 'likert' 
+  | 'yes_no' 
+  | 'yes_no_na' 
+  | 'file' 
+  | 'image' 
+  | 'location' 
+  | 'signature';
+
+export interface ResourceAssignment {
+  id: number;
+  project: number;
+  project_code: string;
+  project_title: string;
+  resource: number;
+  resource_name: string;
+  resource_phone: string;
+  status: 'pending' | 'active' | 'completed' | 'cancelled';
+  status_display: string;
+  assigned_date: string;
+  start_date: string | null;
+  end_date: string | null;
+  assigned_districts: string;
+  assigned_villages: string;
+  target_interviews: number;
+  completed_interviews: number;
+  daily_rate: number | null;
+  total_days: number;
+  total_amount: number | null;
+  amount_paid: number;
+  instructions: string;
+  notes: string;
+  assigned_by: number | null;
+  assigned_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+  completion_percentage: number;
+}
+
+export interface InterviewResponse {
+  id: number;
+  project: number;
+  project_code: string;
+  project_title?: string;
+  questionnaire: number;
+  beneficiary: number;
+  beneficiary_name: string;
+  beneficiary_id: string;
+  beneficiary_details?: Partial<Beneficiary>;
+  interviewer: number | null;
+  interviewer_name: string | null;
+  interview_date: string;
+  interview_start_time: string | null;
+  interview_end_time: string | null;
+  interview_location: string;
+  gps_latitude: number | null;
+  gps_longitude: number | null;
+  status: InterviewStatus;
+  status_display: string;
+  interviewer_notes: string;
+  observations: string;
+  impact_score: number | null;
+  satisfaction_score: number | null;
+  reviewed_by: number | null;
+  reviewed_by_name: string | null;
+  reviewed_at: string | null;
+  review_comments: string;
+  photo: string | null;
+  audio_recording: string | null;
+  consent_signature: string | null;
+  created_at: string;
+  updated_at: string;
+  submitted_at: string | null;
+  duration_minutes: number | null;
+  answer_count?: number;
+  answers?: QuestionAnswer[];
+}
+
+export type InterviewStatus = 
+  | 'draft' 
+  | 'in_progress' 
+  | 'submitted' 
+  | 'reviewed' 
+  | 'approved' 
+  | 'rejected';
+
+export interface QuestionAnswer {
+  id: number;
+  interview: number;
+  question: number;
+  question_text: string;
+  question_type: QuestionType;
+  section_title: string;
+  text_value: string | null;
+  numeric_value: number | null;
+  date_value: string | null;
+  time_value: string | null;
+  datetime_value: string | null;
+  selected_options: string[];
+  file_value: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  is_skipped: boolean;
+  skip_reason: string;
+  display_value: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============== ANALYTICS TYPES ==============
+
+export interface DashboardStats {
+  total_users: number;
+  field_resources: number;
+  available_resources: number;
+  total_projects: number;
+  active_projects: number;
+  total_responses: number;
+  pending_responses: number;
+  my_assignments?: number;
+  my_completed_interviews?: number;
+}
+
+export interface ProjectAnalytics {
+  project_info: {
+    id: number;
+    code: string;
+    title: string;
+    sector: string;
+    status: string;
+    client: string;
+  };
+  sampling_progress: {
+    total_beneficiaries: number;
+    sample_target: number;
+    sampled: number;
+    interviewed: number;
+    completion_percentage: number;
+  };
+  response_status: Record<InterviewStatus, number>;
+  demographics: {
+    gender: Record<string, number>;
+    category: Record<string, number>;
+    age_groups: Record<string, number>;
+    bpl_status: Record<string, number>;
+  };
+  geographic_distribution: {
+    by_district: Array<{ district: string; count: number; interviewed: number }>;
+    by_state: Array<{ state: string; count: number; interviewed: number }>;
+  };
+  impact_metrics: {
+    average_impact_score: number | null;
+    score_distribution: Record<string, number>;
+    question_averages: Array<{
+      question__id: number;
+      question__text: string;
+      avg_score: number;
+      response_count: number;
+    }>;
+  };
+  interview_timeline: Array<{
+    month: string;
+    count: number;
+    approved: number;
+  }>;
+  field_resource_performance: Array<{
+    resource_name: string;
+    target: number;
+    completed: number;
+    completion_rate: number;
+    status: string;
+  }>;
+}
+
+// ============== API RESPONSE TYPES ==============
+
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export interface AuthTokens {
+  access: string;
+  refresh: string;
+}
+
+export interface ApiError {
+  detail?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
+// ============== FORM TYPES ==============
+
+export interface LoginForm {
+  username: string;
+  password: string;
+}
+
+export interface ProjectForm {
+  code: string;
+  title: string;
+  description: string;
+  objectives?: string;
+  client: number;
+  sector: ProjectSector;
+  status?: ProjectStatus;
+  states?: string;
+  districts?: string;
+  total_beneficiaries?: number;
+  sample_size?: number;
+  sample_percentage?: number;
+  beneficiary_type?: string;
+  grant_start_date?: string;
+  grant_end_date?: string;
+  assessment_start_date?: string;
+  assessment_end_date?: string;
+  grant_amount?: number;
+  assessment_budget?: number;
+  project_manager?: number;
+}
+
+export interface UserForm {
+  username: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+  first_name: string;
+  last_name: string;
+  role: User['role'];
+  organization?: number;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  aadhar_number?: string;
+  bank_account?: string;
+  ifsc_code?: string;
+  daily_rate?: number;
+  education?: string;
+  languages_known?: string;
+  experience_years?: number;
+  is_available?: boolean;
+}
+
+// ============== CONTEXT TYPES ==============
+
+export interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+  loading: boolean;
+}
