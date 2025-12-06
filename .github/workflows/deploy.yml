@@ -24,18 +24,11 @@ jobs:
         run: npm run build
       
       - name: Deploy to VPS
-        uses: appleboy/scp-action@master
+        uses: easingthemes/ssh-deploy@main
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          source: "build/*"
-          target: "/home/impactanalysis.rtcknowledge.com/public_html"
-          strip_components: 1
-          protocol: tcp
-          timeout: 30s
-          command_timeout: 10m
-          tar_exec: tar
-          rm: true
-          overwrite: true
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          SOURCE: "build/"
+          TARGET: "/home/impactanalysis.rtcknowledge.com/public_html"
