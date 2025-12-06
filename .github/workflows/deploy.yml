@@ -28,11 +28,9 @@ jobs:
       - name: Create deployment package
         run: |
           mkdir -p deploy_package
-          cp -r .next deploy_package/
-          [ -d public ] && cp -r public deploy_package/ || echo "No public directory"
+          cp -r build deploy_package/
           cp package.json deploy_package/
           cp package-lock.json deploy_package/
-          cp next.config.js deploy_package/
           tar -czf deploy.tar.gz -C deploy_package .
       
       - name: Deploy to server via rsync
@@ -44,7 +42,7 @@ jobs:
           SOURCE: "deploy.tar.gz"
           TARGET: "/tmp/impactanalysis_deploy.tar.gz"
       
-      - name: Extract, setup files and restart PM2
+      - name: Extract and setup files
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -57,8 +55,4 @@ jobs:
             rm /tmp/impactanalysis_deploy.tar.gz
             chown -R impac2613:impac2613 /home/impactanalysis.rtcknowledge.com/public_html
             chmod -R 755 /home/impactanalysis.rtcknowledge.com/public_html
-            cd /home/impactanalysis.rtcknowledge.com/public_html
-            npm install --production
-            PORT=3001 pm2 restart impactanalysis || PORT=3001 pm2 start npm --name "impactanalysis" -- start
-            pm2 save
             echo "Impact Analysis deployment completed at $(date)"
