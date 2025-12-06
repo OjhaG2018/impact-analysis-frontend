@@ -32,3 +32,10 @@ jobs:
           REMOTE_PORT: ${{ secrets.SSH_PORT }}
           SOURCE: "build/"
           TARGET: "/home/impactanalysis.rtcknowledge.com/public_html"
+          ARGS: "-avz --delete"
+          SCRIPT_BEFORE: |
+            whoami
+            ls -al
+          SCRIPT_AFTER: |
+            echo "Deployment completed"
+            ls -al /home/impactanalysis.rtcknowledge.com/public_html
