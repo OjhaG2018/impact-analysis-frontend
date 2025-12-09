@@ -1,6 +1,7 @@
 // frontend/src/App.tsx
 // UPDATED: Added VideoAnalysisPage route and public AI interview route
 import React from 'react';
+import GrameenUdyamiDashboard from './pages/GrameenUdyamiDashboard';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { MainLayout } from './components/layout/MainLayout';
@@ -11,6 +12,9 @@ import {
   RegisterPage,
   ProjectsPage,
   ResourcesPage,
+  ResourceAssignmentsPage,
+  MyAssignmentsPage,
+  AttendancePage,
   QuestionnairesPage,
   BeneficiariesPage,
   InterviewsPage,
@@ -57,6 +61,9 @@ const AppContent: React.FC = () => {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/resources" element={<ResourcesPage />} />
+                <Route path="/assignments" element={<ResourceAssignmentsPage />} />
+                <Route path="/my-assignments" element={<MyAssignmentsPage />} />
+                <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/questionnaires" element={<QuestionnairesPage />} />
                 <Route path="/beneficiaries" element={<BeneficiariesPage />} />
                 <Route path="/interviews" element={<InterviewsPage />} />
@@ -64,6 +71,7 @@ const AppContent: React.FC = () => {
                 <Route path="/video-analysis" element={<VideoAnalysisPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/demo/grameen-udyami" element={<GrameenUdyamiDashboard />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </MainLayout>

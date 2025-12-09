@@ -1,16 +1,13 @@
-// frontend/src/pages/index.ts
-// UPDATED: Added VideoAnalysisPage export
-
-export { default as Dashboard } from './Dashboard';
-export { default as LoginPage } from './LoginPage';
-export { default as RegisterPage } from './RegisterPage';
-export { default as ProjectsPage } from './ProjectsPage';
-export { default as ResourcesPage } from './ResourcesPage';
-export { default as QuestionnairesPage } from './QuestionnairesPage';
-export { default as BeneficiariesPage } from './BeneficiariesPage';
-export { default as InterviewsPage } from './InterviewsPage';
-export { default as AnalyticsPage } from './AnalyticsPage';
-export { default as SettingsPage } from './SettingsPage';
-export { default as AIInterviewsManagementPage } from './AIInterviewsManagementPage';
-export { default as AIVoiceInterviewPage } from './AIVoiceInterviewPage';
-export { default as VideoAnalysisPage } from './VideoAnalysisPage';  // NEW
+// Re-export from features
+export { LoginPage } from '../features/auth';
+export { DashboardPage as Dashboard } from '../features/dashboard';
+export { ProjectsPage } from '../features/projects';
+export { BeneficiariesPage } from '../features/beneficiaries';
+export { FieldResourcesPage as ResourcesPage, ResourceAssignmentsPage, MyAssignmentsPage, AttendancePage } from '../features/field-resources';
+export { QuestionnairesPage } from '../features/questionnaires';
+export { InterviewsPage } from '../features/interviews';
+export { AIVoiceInterviewPage, AIInterviewsManagementPage } from '../features/ai-voice-interviews';
+export { VideoAnalysisPage } from '../features/video-analysis';
+export { AnalyticsPage } from '../features/analytics';
+export { SettingsPage } from '../features/settings';
+export { LoginPage as RegisterPage } from '../features/auth';
