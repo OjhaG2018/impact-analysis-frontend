@@ -55,7 +55,7 @@ interface ConversationMessage {
   timestamp: Date;
 }
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://impact.rtcknowledge.com';
 
 const AIVoiceInterviewPage: React.FC = () => {
   const { accessToken } = useParams<{ accessToken: string }>();
