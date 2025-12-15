@@ -11,3 +11,4 @@ export { VideoAnalysisPage } from '../features/video-analysis';
 export { AnalyticsPage } from '../features/analytics';
 export { SettingsPage } from '../features/settings';
 export { LoginPage as RegisterPage } from '../features/auth';
+export { PrerecordedVideoUploadPage } from '../features/video-analysis';

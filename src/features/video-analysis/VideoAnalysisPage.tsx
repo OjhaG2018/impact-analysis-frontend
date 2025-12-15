@@ -1,11 +1,13 @@
 /**
  * VideoAnalysisPage.tsx
  * Admin page for viewing and managing AI interview video analyses.
- * Place this file in: frontend/src/pages/VideoAnalysisPage.tsx
+ * Place this file in: frontend/src/features/video-analysis/VideoAnalysisPage.tsx
  */
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Upload } from 'lucide-react';
 import { Card, Button, Badge, LoadingSpinner, Modal } from '../../components/ui';
-import api from '../../api';
+import api, { videoAnalysisApi } from '../../api';
 
 // API base URL for media files
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -49,6 +51,7 @@ interface InterviewVideo {
 }
 
 const VideoAnalysisPage: React.FC = () => {
+  const navigate = useNavigate();
   const [videos, setVideos] = useState<InterviewVideo[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<InterviewVideo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,13 +108,8 @@ const VideoAnalysisPage: React.FC = () => {
     setIsAnalyzing(true);
     setError(null);
     try {
-      const response = await api.post<{ success: boolean; message?: string; error?: string }>(
-        `/ai-interviews/videos/${videoId}/analyze/`, 
-        {
-          analysis_type: 'comprehensive',
-          num_frames: 5
-        }
-      );
+      // Use the videoAnalysisApi for analysis
+      const response = await videoAnalysisApi.analyzeVideo(videoId);
       
       if (response.success) {
         setSuccess(response.message || 'Video analysis completed successfully');
@@ -134,7 +132,7 @@ const VideoAnalysisPage: React.FC = () => {
     if (!selectedAnalysisId) return;
     
     try {
-      await api.post(`/ai-interviews/video-analyses/${selectedAnalysisId}/review/`, {
+      await videoAnalysisApi.reviewAnalysis(selectedAnalysisId, {
         review_notes: reviewNotes,
         clear_review_flag: true
       });
@@ -195,10 +193,19 @@ const VideoAnalysisPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Video Analysis Dashboard</h1>
-        <p className="text-gray-600 mt-1">Review AI analysis of beneficiary interview videos</p>
+      {/* Header with Upload Button */}
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Video Analysis Dashboard</h1>
+          <p className="text-gray-600 mt-1">Review AI analysis of beneficiary interview videos</p>
+        </div>
+        <Button 
+          onClick={() => navigate('/upload-videos')}
+          className="flex items-center gap-2"
+        >
+          <Upload className="w-4 h-4" />
+          Upload Videos
+        </Button>
       </div>
 
       {/* Alerts */}
@@ -279,9 +286,16 @@ const VideoAnalysisPage: React.FC = () => {
         <Card className="p-12 text-center">
           <div className="text-6xl mb-4">📹</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Videos Found</h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 mb-4">
             Videos will appear here once beneficiaries complete interviews with video recording.
           </p>
+          <Button 
+            onClick={() => navigate('/upload-videos')}
+            className="inline-flex items-center gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Upload Pre-recorded Videos
+          </Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

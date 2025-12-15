@@ -210,6 +210,16 @@ export const endpoints = {
   aiSessions: '/ai-interviews/sessions/',
   aiTemplates: '/ai-interviews/templates/',
   aiAnswers: '/ai-interviews/answers/',
+  aiVideos: '/ai-interviews/videos/',
+  aiVideoAnalyses: '/ai-interviews/video-analyses/',
+  
+  // AI Interview Video endpoints
+  uploadPrerecordedVideo: '/ai-interviews/upload-prerecorded/',
+  bulkUploadVideos: '/ai-interviews/upload-prerecorded/bulk/',
+  videoList: '/ai-interviews/video-list/',
+  triggerBulkAnalysis: '/ai-interviews/trigger-bulk-analysis/',
+  analyzeVideo: (videoId: number) => `/ai-interviews/videos/${videoId}/analyze/`,
+  serveVideo: (videoId: number) => `/ai-interviews/videos/${videoId}/serve/`,
   
   // Public AI Interview endpoints (no auth)
   publicInterview: (token: string) => `/ai-interviews/public/${token}/`,
@@ -217,10 +227,113 @@ export const endpoints = {
   processAudio: (token: string) => `/ai-interviews/public/${token}/process-audio/`,
   processText: (token: string) => `/ai-interviews/public/${token}/process-text/`,
   pauseInterview: (token: string) => `/ai-interviews/public/${token}/pause/`,
+  stopInterview: (token: string) => `/ai-interviews/public/${token}/stop/`,
   resumeInterview: (token: string) => `/ai-interviews/public/${token}/resume/`,
   resetInterview: (token: string) => `/ai-interviews/public/${token}/reset/`,
   questionAudio: (token: string, questionId: number) => 
     `/ai-interviews/public/${token}/question/${questionId}/audio/`,
+  videoSettings: (token: string) => `/ai-interviews/public/${token}/video-settings/`,
+  videoConsent: (token: string) => `/ai-interviews/public/${token}/video-consent/`,
+  uploadVideo: (token: string) => `/ai-interviews/public/${token}/upload-video/`,
+};
+
+// ============== VIDEO ANALYSIS API ==============
+
+export const videoAnalysisApi = {
+  // Upload single pre-recorded video
+  uploadPrerecordedVideo: async (formData: FormData): Promise<any> => {
+    return api.uploadFile(endpoints.uploadPrerecordedVideo, formData);
+  },
+
+  // Bulk upload videos
+  bulkUploadVideos: async (formData: FormData): Promise<any> => {
+    return api.uploadFile(endpoints.bulkUploadVideos, formData);
+  },
+
+  // Get list of videos with filters
+  getVideoList: async (params?: {
+    status?: string;
+    project_id?: number;
+    needs_analysis?: boolean;
+    page?: number;
+    page_size?: number;
+  }): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    const query = queryParams.toString();
+    return api.get(`${endpoints.videoList}${query ? `?${query}` : ''}`);
+  },
+
+  // Trigger analysis for a single video
+  analyzeVideo: async (videoId: number, options?: {
+    analysis_type?: string;
+    num_frames?: number;
+  }): Promise<any> => {
+    return api.post(endpoints.analyzeVideo(videoId), options || {
+      analysis_type: 'comprehensive',
+      num_frames: 5
+    });
+  },
+
+  // Trigger bulk analysis
+  triggerBulkAnalysis: async (data: {
+    video_ids?: number[];
+    analyze_all_pending?: boolean;
+  }): Promise<any> => {
+    return api.post(endpoints.triggerBulkAnalysis, data);
+  },
+
+  // Get all videos (via viewset)
+  getVideos: async (params?: {
+    analysis_status?: string;
+  }): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    const query = queryParams.toString();
+    return api.get(`${endpoints.aiVideos}${query ? `?${query}` : ''}`);
+  },
+
+  // Get video analyses
+
+  getVideoAnalyses: async (params?: {
+    requires_review?: boolean;
+  }): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    const query = queryParams.toString();
+    return api.get(`${endpoints.aiVideoAnalyses}${query ? `?${query}` : ''}`);
+  },
+
+  // Get pending review analyses
+  getPendingReviewAnalyses: async (): Promise<any> => {
+    return api.get(`${endpoints.aiVideoAnalyses}pending_review/`);
+  },
+
+  // Mark analysis as reviewed
+  reviewAnalysis: async (analysisId: number, data: {
+    review_notes?: string;
+    clear_review_flag?: boolean;
+  }): Promise<any> => {
+    return api.post(`${endpoints.aiVideoAnalyses}${analysisId}/review/`, data);
+  },
 };
 
 // ============== QUESTIONNAIRE API ==============

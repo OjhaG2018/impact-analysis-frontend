@@ -1,5 +1,4 @@
 // frontend/src/App.tsx
-// UPDATED: Added VideoAnalysisPage route and public AI interview route
 import React from 'react';
 import GrameenUdyamiDashboard from './pages/GrameenUdyamiDashboard';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -23,6 +22,7 @@ import {
   AIInterviewsManagementPage,
   AIVoiceInterviewPage,
   VideoAnalysisPage,
+  PrerecordedVideoUploadPage,  // ADD THIS
 } from './pages';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -69,6 +69,7 @@ const AppContent: React.FC = () => {
                 <Route path="/interviews" element={<InterviewsPage />} />
                 <Route path="/ai-interviews" element={<AIInterviewsManagementPage />} />
                 <Route path="/video-analysis" element={<VideoAnalysisPage />} />
+                <Route path="/upload-videos" element={<PrerecordedVideoUploadPage />} />  {/* ADD THIS */}
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/demo/grameen-udyami" element={<GrameenUdyamiDashboard />} />
