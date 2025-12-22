@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   BarChart3, FolderOpen, Users, ClipboardList, FileText, 
   TrendingUp, Settings, LogOut, Menu, Search, Bot, UserCheck,
-  Video  // Added Video icon
+  Video, Headphones  // Added Video and Headphones icons
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -26,7 +26,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     { id: 'questionnaires', label: 'Questionnaires', icon: ClipboardList, path: '/questionnaires' },
     { id: 'interviews', label: 'Interviews', icon: FileText, path: '/interviews' },
     { id: 'ai-interviews', label: 'AI Interviews', icon: Bot, path: '/ai-interviews' },
-    { id: 'video-analysis', label: 'Video Analysis', icon: Video, path: '/video-analysis' },  // NEW
+    { id: 'video-analysis', label: 'Video Analysis', icon: Video, path: '/video-analysis' },
+    { id: 'audio-analysis', label: 'Audio Analysis', icon: Headphones, path: '/audio-analysis' },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];

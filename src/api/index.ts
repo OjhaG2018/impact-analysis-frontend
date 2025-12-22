@@ -221,6 +221,17 @@ export const endpoints = {
   analyzeVideo: (videoId: number) => `/ai-interviews/videos/${videoId}/analyze/`,
   serveVideo: (videoId: number) => `/ai-interviews/videos/${videoId}/serve/`,
   
+  // Sentiment Analysis endpoints (NEW)
+  sentimentAnalyses: '/ai-interviews/sentiment-analyses/',
+  sentimentAnalysis: (id: number) => `/ai-interviews/sentiment-analyses/${id}/`,
+  sentimentAnalyze: '/ai-interviews/sentiment-analyses/analyze/',
+  sentimentBulkAnalyze: '/ai-interviews/sentiment-analyses/bulk_analyze/',
+  sentimentReview: (id: number) => `/ai-interviews/sentiment-analyses/${id}/review/`,
+  sentimentPendingReview: '/ai-interviews/sentiment-analyses/pending_review/',
+  sentimentReport: (id: number) => `/ai-interviews/sentiment-analyses/${id}/report/`,
+  sentimentProjectSummary: '/ai-interviews/sentiment-analyses/project_summary/',
+  sentimentAnalytics: '/ai-interviews/sentiment-analyses/analytics/',
+  
   // Public AI Interview endpoints (no auth)
   publicInterview: (token: string) => `/ai-interviews/public/${token}/`,
   startInterview: (token: string) => `/ai-interviews/public/${token}/start/`,
@@ -235,6 +246,319 @@ export const endpoints = {
   videoSettings: (token: string) => `/ai-interviews/public/${token}/video-settings/`,
   videoConsent: (token: string) => `/ai-interviews/public/${token}/video-consent/`,
   uploadVideo: (token: string) => `/ai-interviews/public/${token}/upload-video/`,
+};
+
+// ============== SENTIMENT ANALYSIS TYPES ==============
+
+export interface SentimentAnalysis {
+  id: number;
+  video: number;
+  question?: number;
+  video_analysis?: number;
+  
+  // Metadata
+  analysis_version: string;
+  analysis_status: 'pending' | 'processing' | 'completed' | 'failed' | 'partial';
+  analyzed_at?: string;
+  duration_seconds?: number;
+  word_count?: number;
+  transcript?: string;
+  question_context?: string;
+  
+  // Polarity
+  polarity_score: number;
+  polarity_label: string;
+  polarity_magnitude?: number;
+  polarity_confidence?: number;
+  polarity_distribution?: Record<string, number>;
+  polarity_trajectory?: Array<{ timestamp: number; score: number; label: string }>;
+  dominant_phrases?: Array<{ phrase: string; polarity: string; score: number }>;
+  
+  // Scores
+  composite_score: number;
+  textual_score?: number;
+  visual_score?: number;
+  vocal_score?: number;
+  score_magnitude?: number;
+  score_confidence?: number;
+  modality_weights?: Record<string, number>;
+  
+  // Aspects
+  aspect_sentiments?: Array<{
+    aspect_id: string;
+    name: string;
+    category: string;
+    score: number;
+    confidence: number;
+    mentions: number;
+    keywords: string[];
+  }>;
+  aspect_summary?: Record<string, any>;
+  
+  // Emotions
+  primary_emotion: string;
+  primary_emotion_confidence?: number;
+  secondary_emotion?: string;
+  secondary_emotion_confidence?: number;
+  emotion_distribution?: Record<string, number>;
+  emotion_trajectory?: Array<{ timestamp: number; emotions: Record<string, number> }>;
+  emotion_triggers?: Array<{ emotion: string; trigger_text: string; timestamp: number }>;
+  secondary_emotions_detected?: string[];
+  
+  // Authenticity
+  authenticity_score?: number;
+  text_visual_alignment?: number;
+  micro_expressions_detected?: boolean;
+  authenticity_notes?: string;
+  
+  // Intent
+  primary_intent?: string;
+  primary_intent_confidence?: number;
+  secondary_intents?: string[];
+  intent_evidence?: string[];
+  implicit_intents?: string[];
+  social_desirability_score?: number;
+  
+  // Quality
+  analysis_confidence: number;
+  response_coherence?: 'high' | 'medium' | 'low';
+  engagement_level?: 'high' | 'medium' | 'low';
+  red_flags?: string[];
+  quality_indicators?: Record<string, any>;
+  
+  // Narrative
+  executive_summary?: string;
+  detailed_findings?: string;
+  notable_observations?: string[];
+  research_notes?: string;
+  
+  // Processing
+  model_used?: string;
+  processing_time_seconds?: number;
+  tokens_used?: number;
+  error_message?: string;
+  
+  // Review
+  requires_review: boolean;
+  reviewed_by?: number;
+  reviewed_at?: string;
+  review_notes?: string;
+  review_adjustments?: Record<string, any>;
+  
+  // Timestamps
+  created_at: string;
+  updated_at: string;
+  
+  // Computed/Display
+  sentiment_label?: string;
+  has_concerns?: boolean;
+  is_complete?: boolean;
+  modality_agreement?: number;
+  beneficiary_name?: string;
+  project_name?: string;
+}
+
+export interface SentimentAnalysisSummary {
+  id: number;
+  video: number;
+  analysis_status: string;
+  polarity_score: number;
+  polarity_label: string;
+  primary_emotion: string;
+  composite_score: number;
+  authenticity_score?: number;
+  requires_review: boolean;
+  created_at: string;
+  beneficiary_name?: string;
+}
+
+export interface SentimentAnalyticsData {
+  summary: {
+    total_analyses: number;
+    completed: number;
+    pending: number;
+    failed: number;
+    requires_review: number;
+  };
+  sentiment_trends: {
+    overall_average: number;
+    trend_direction: string;
+    trend_change: number;
+  };
+  polarity_distribution: Record<string, number>;
+  emotion_distribution: Record<string, number>;
+  authenticity_stats: {
+    average: number;
+    high_confidence: number;
+    medium_confidence: number;
+    low_confidence: number;
+  };
+  processing_stats: {
+    average_processing_time: number;
+    total_tokens_used: number;
+  };
+}
+
+export interface ProjectSentimentSummary {
+  project_id: number;
+  project_name: string;
+  total_analyses: number;
+  completed_analyses: number;
+  average_sentiment: number;
+  sentiment_distribution: Record<string, number>;
+  emotion_breakdown: Record<string, number>;
+  average_authenticity: number;
+  requires_review_count: number;
+  top_aspects?: Array<{ aspect: string; average_sentiment: number }>;
+}
+
+export interface SentimentAnalysisReport {
+  id: number;
+  generated_at: string;
+  metadata: {
+    video_id: number;
+    beneficiary?: string;
+    project?: string;
+    question?: string;
+  };
+  polarity_summary: {
+    score: number;
+    label: string;
+    confidence: number;
+    distribution: Record<string, number>;
+  };
+  emotion_summary: {
+    primary: string;
+    secondary?: string;
+    distribution: Record<string, number>;
+  };
+  authenticity_summary: {
+    score: number;
+    text_visual_alignment: number;
+    concerns: string[];
+  };
+  narrative: {
+    executive_summary: string;
+    detailed_findings: string;
+    notable_observations: string[];
+  };
+  recommendations: string[];
+}
+
+// ============== SENTIMENT ANALYSIS API ==============
+
+export const sentimentAnalysisApi = {
+  // List all sentiment analyses with optional filters
+  getAnalyses: async (params?: {
+    status?: string;
+    video_id?: number;
+    project_id?: number;
+    polarity?: string;
+    emotion?: string;
+    needs_review?: boolean;
+    page?: number;
+    page_size?: number;
+  }): Promise<PaginatedResponse<SentimentAnalysisSummary>> => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    const query = queryParams.toString();
+    return api.get(`${endpoints.sentimentAnalyses}${query ? `?${query}` : ''}`);
+  },
+
+  // Get single analysis by ID
+  getAnalysis: async (id: number): Promise<SentimentAnalysis> => {
+    return api.get(endpoints.sentimentAnalysis(id));
+  },
+
+  // Create new analysis record
+  createAnalysis: async (data: Partial<SentimentAnalysis>): Promise<SentimentAnalysis> => {
+    return api.post(endpoints.sentimentAnalyses, data);
+  },
+
+  // Update analysis
+  updateAnalysis: async (id: number, data: Partial<SentimentAnalysis>): Promise<SentimentAnalysis> => {
+    return api.patch(endpoints.sentimentAnalysis(id), data);
+  },
+
+  // Delete analysis
+  deleteAnalysis: async (id: number): Promise<void> => {
+    return api.delete(endpoints.sentimentAnalysis(id));
+  },
+
+  // Trigger sentiment analysis for a video
+  analyzeVideo: async (data: {
+    video_id: number;
+    question_context?: string;
+    analysis_type?: 'full' | 'quick' | 'text_only' | 'visual_only';
+  }): Promise<{
+    success: boolean;
+    message: string;
+    analysis_id?: number;
+    data?: SentimentAnalysis;
+    error?: string;
+  }> => {
+    return api.post(endpoints.sentimentAnalyze, data);
+  },
+
+  // Bulk analyze multiple videos
+  bulkAnalyze: async (data: {
+    video_ids?: number[];
+    analyze_all_pending?: boolean;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    total_requested: number;
+    successful: number;
+    failed: number;
+    results: Array<{
+      video_id: number;
+      analysis_id?: number;
+      status: string;
+      error?: string;
+    }>;
+  }> => {
+    return api.post(endpoints.sentimentBulkAnalyze, data);
+  },
+
+  // Mark analysis as reviewed
+  reviewAnalysis: async (id: number, data: {
+    notes?: string;
+    clear_review_flag?: boolean;
+    adjustments?: Record<string, any>;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    reviewed_by?: string;
+    reviewed_at?: string;
+  }> => {
+    return api.post(endpoints.sentimentReview(id), data);
+  },
+
+  // Get analyses pending review
+  getPendingReview: async (): Promise<SentimentAnalysisSummary[]> => {
+    return api.get(endpoints.sentimentPendingReview);
+  },
+
+  // Get detailed report for an analysis
+  getReport: async (id: number): Promise<SentimentAnalysisReport> => {
+    return api.get(endpoints.sentimentReport(id));
+  },
+
+  // Get project sentiment summary
+  getProjectSummary: async (projectId: number): Promise<ProjectSentimentSummary> => {
+    return api.get(`${endpoints.sentimentProjectSummary}?project_id=${projectId}`);
+  },
+
+  // Get overall analytics
+  getAnalytics: async (): Promise<SentimentAnalyticsData> => {
+    return api.get(endpoints.sentimentAnalytics);
+  },
 };
 
 // ============== VIDEO ANALYSIS API ==============
@@ -306,7 +630,6 @@ export const videoAnalysisApi = {
   },
 
   // Get video analyses
-
   getVideoAnalyses: async (params?: {
     requires_review?: boolean;
   }): Promise<any> => {
@@ -524,5 +847,108 @@ export const questionnaireApi = {
     return api.get(endpoints.questionnaireStatistics);
   },
 };
+
+
+// ==================== AUDIO TYPES ====================
+
+export interface AudioFile {
+  id: number;
+  title: string;
+  audio_type: string;
+  audio_type_display?: string;
+  audio_file: string;
+  audio_url?: string;
+  description?: string;
+  duration_seconds: number | null;
+  file_size_bytes: number | null;
+  audio_format: string;
+  analysis_status: 'pending' | 'processing' | 'completed' | 'failed';
+  analysis_status_display?: string;
+  beneficiary_name?: string;
+  project_title?: string;
+  uploaded_at: string;
+  analyzed_at: string | null;
+  analyses?: AudioAnalysis[];
+}
+
+export interface AudioAnalysis {
+  id: number;
+  audio: number;
+  analysis_type: string;
+  transcript: string;
+  transcript_language: string;
+  transcript_language_name: string;
+  transcript_confidence: number;
+  transcript_duration: number;
+  transcript_word_count: number;
+  polarity_score: number;
+  polarity_label: string;
+  polarity_confidence: number;
+  primary_emotion: string;
+  primary_emotion_confidence: number;
+  secondary_emotion?: string;
+  emotion_distribution?: Record<string, number>;
+  sentiment_label?: string;
+  primary_intent?: string;
+  primary_intent_confidence?: number;
+  analysis_confidence: number;
+  response_coherence: string;
+  engagement_level: string;
+  executive_summary: string;
+  detailed_findings?: string;
+  notable_observations?: string[];
+  key_phrases?: string[];
+  red_flags?: string[];
+  positive_indicators?: string[];
+  requires_review: boolean;
+  review_reasons?: string[];
+  model_used: string;
+  processing_time_seconds: number | null;
+  tokens_used: number;
+  created_at: string;
+}
+
+// ==================== AUDIO API FUNCTIONS ====================
+
+export const audioAnalysisApi = {
+  uploadAudio: async (formData: FormData): Promise<any> => {
+    return api.uploadFile('/ai-interviews/upload-audio/', formData);
+  },
+  
+  getAudioList: async (params?: {
+    status?: string;
+    project_id?: number;
+    page?: number;
+    page_size?: number;
+  }): Promise<{ total: number; page: number; page_size: number; results: AudioFile[] }> => {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.project_id) queryParams.append('project_id', params.project_id.toString());
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
+    
+    const url = `/ai-interviews/audio-list/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return api.get(url);
+  },
+  
+  deleteAudioFile: async (id: number): Promise<void> => {
+    return api.delete(`/ai-interviews/audio-files/${id}/`);
+  },
+  
+  analyzeAudio: async (audioId: number, options?: {
+    analysis_type?: 'transcription' | 'sentiment' | 'comprehensive';
+    question_context?: string;
+  }): Promise<any> => {
+    return api.post(`/ai-interviews/audio-files/${audioId}/analyze/`, options || {});
+  },
+  
+  bulkAnalyzeAudio: async (audioIds?: number[]): Promise<any> => {
+    return api.post('/ai-interviews/trigger-bulk-audio-analysis/', {
+      audio_ids: audioIds,
+      analyze_all_pending: !audioIds || audioIds.length === 0
+    });
+  },
+};
+
 
 export default api;

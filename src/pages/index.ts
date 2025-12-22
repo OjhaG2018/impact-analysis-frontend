@@ -7,7 +7,7 @@ export { FieldResourcesPage as ResourcesPage, ResourceAssignmentsPage, MyAssignm
 export { QuestionnairesPage } from '../features/questionnaires';
 export { InterviewsPage } from '../features/interviews';
 export { AIVoiceInterviewPage, AIInterviewsManagementPage } from '../features/ai-voice-interviews';
-export { VideoAnalysisPage } from '../features/video-analysis';
+export { VideoAnalysisPage, SentimentAnalysisPage, AudioAnalysisPage } from '../features/video-analysis';
 export { AnalyticsPage } from '../features/analytics';
 export { SettingsPage } from '../features/settings';
 export { LoginPage as RegisterPage } from '../features/auth';

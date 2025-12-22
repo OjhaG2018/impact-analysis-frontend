@@ -22,7 +22,9 @@ import {
   AIInterviewsManagementPage,
   AIVoiceInterviewPage,
   VideoAnalysisPage,
-  PrerecordedVideoUploadPage,  // ADD THIS
+  SentimentAnalysisPage,
+  PrerecordedVideoUploadPage,
+  AudioAnalysisPage,
 } from './pages';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -69,7 +71,9 @@ const AppContent: React.FC = () => {
                 <Route path="/interviews" element={<InterviewsPage />} />
                 <Route path="/ai-interviews" element={<AIInterviewsManagementPage />} />
                 <Route path="/video-analysis" element={<VideoAnalysisPage />} />
-                <Route path="/upload-videos" element={<PrerecordedVideoUploadPage />} />  {/* ADD THIS */}
+                <Route path="/audio-analysis" element={<AudioAnalysisPage />} />
+                <Route path="/sentiment-analysis" element={<SentimentAnalysisPage />} />  {/* ADD THIS */}
+                <Route path="/upload-videos" element={<PrerecordedVideoUploadPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/demo/grameen-udyami" element={<GrameenUdyamiDashboard />} />
