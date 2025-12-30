@@ -50,9 +50,9 @@ class ApiService {
     return response.json();
   }
 
-  // Auth endpoints
+  // Auth endpoints - CHANGED: /token/ -> /core/login/
   async login(username: string, password: string): Promise<AuthTokens> {
-    const response = await fetch(`${API_BASE_URL}/token/`, {
+    const response = await fetch(`${API_BASE_URL}/core/login/`, {
       method: 'POST',
       headers: this.getHeaders(false),
       body: JSON.stringify({ username, password }),
@@ -60,8 +60,9 @@ class ApiService {
     return this.handleResponse<AuthTokens>(response);
   }
 
+  // CHANGED: /token/refresh/ -> /core/token/refresh/
   async refreshToken(refresh: string): Promise<{ access: string }> {
-    const response = await fetch(`${API_BASE_URL}/token/refresh/`, {
+    const response = await fetch(`${API_BASE_URL}/core/token/refresh/`, {
       method: 'POST',
       headers: this.getHeaders(false),
       body: JSON.stringify({ refresh }),
@@ -170,6 +171,11 @@ export const endpoints = {
   changePassword: '/core/change-password/',
   organizations: '/core/organizations/',
   auditLogs: '/core/audit-logs/',
+  
+  // Password Reset (NEW)
+  passwordResetRequest: '/core/password-reset/request/',
+  passwordResetValidate: '/core/password-reset/validate/',
+  passwordResetConfirm: '/core/password-reset/confirm/',
 
   // Projects
   projects: '/projects/',
@@ -209,10 +215,10 @@ export const endpoints = {
   // AI Interviews
   aiSessions: '/ai-interviews/sessions/',
   aiTemplates: '/ai-interviews/templates/',
+  aiSessionTemplates: '/ai-interviews/templates/',
   aiAnswers: '/ai-interviews/answers/',
   aiVideos: '/ai-interviews/videos/',
   aiVideoAnalyses: '/ai-interviews/video-analyses/',
-  
   // AI Interview Video endpoints
   uploadPrerecordedVideo: '/ai-interviews/upload-prerecorded/',
   bulkUploadVideos: '/ai-interviews/upload-prerecorded/bulk/',
@@ -247,6 +253,37 @@ export const endpoints = {
   videoConsent: (token: string) => `/ai-interviews/public/${token}/video-consent/`,
   uploadVideo: (token: string) => `/ai-interviews/public/${token}/upload-video/`,
 };
+
+
+// ============== PASSWORD RESET API ==============
+
+export const passwordResetApi = {
+  // Request password reset email
+  requestReset: async (email: string): Promise<{ message: string }> => {
+    return api.post(endpoints.passwordResetRequest, { email });
+  },
+
+  // Validate reset token
+  validateToken: async (uid: string, token: string): Promise<{
+    valid: boolean;
+    email?: string;
+    username?: string;
+    error?: string;
+  }> => {
+    return api.post(endpoints.passwordResetValidate, { uid, token });
+  },
+
+  // Confirm password reset with new password
+  confirmReset: async (data: {
+    uid: string;
+    token: string;
+    new_password: string;
+    confirm_password: string;
+  }): Promise<{ message: string }> => {
+    return api.post(endpoints.passwordResetConfirm, data);
+  },
+};
+
 
 // ============== SENTIMENT ANALYSIS TYPES ==============
 
@@ -881,8 +918,13 @@ export interface AudioAnalysis {
   transcript_confidence: number;
   transcript_duration: number;
   transcript_word_count: number;
+
+  conversation_summary?: string;
+  
   polarity_score: number;
   polarity_label: string;
+
+
   polarity_confidence: number;
   primary_emotion: string;
   primary_emotion_confidence: number;

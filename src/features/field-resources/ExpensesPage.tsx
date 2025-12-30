@@ -124,13 +124,13 @@ const ExpensesPage: React.FC = () => {
     }
   };
 
-  const handleEdit = (expense: Expense) => {
+  const openEditModal = (expense: Expense) => {
     setFormData({
-      assignment: expense.assignment.toString(),
-      expense_type: expense.expense_type,
-      date: expense.date,
-      amount: expense.amount,
-      description: expense.description,
+      assignment: expense.assignment?.toString() || '',
+      expense_type: expense.expense_type || '',
+      date: expense.date || '',
+      amount: expense.amount || '',
+      description: expense.description || '',
     });
     setEditingId(expense.id);
     setShowModal(true);
@@ -270,7 +270,7 @@ const ExpensesPage: React.FC = () => {
                             Approve
                           </Button>
                         )}
-                        <Button size="sm" variant="ghost" onClick={() => handleEdit(expense)}>
+                        <Button size="sm" variant="ghost" onClick={() => openEditModal(expense)}>
                           Edit
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => handleDelete(expense.id)}>

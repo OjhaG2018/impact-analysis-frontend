@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, UserCheck, Clock, DollarSign } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Users, UserCheck, Clock, DollarSign, Eye, Edit, Trash2, Search, RefreshCw } from 'lucide-react';
 import api, { endpoints } from '../../api';
 import { User } from '../../types';
-import { Card, Button, Input, Modal, Badge, DataTable, Select } from '../../components/ui';
+import { Card, Button, Input, Modal, Badge, Select, LoadingSpinner } from '../../components/ui';
 import ResourceAssignmentsPage from './ResourceAssignmentsPage';
 import AttendancePage from './AttendancePage';
 import ExpensesPage from './ExpensesPage';
 
-// ============== RESOURCES PAGE ==============
 export const ResourcesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<'resources' | 'assignments' | 'attendance' | 'expenses'>('resources');
   const [resources, setResources] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -39,12 +43,14 @@ export const ResourcesPage: React.FC = () => {
   }, []);
 
   const loadResources = async () => {
+    setLoading(true);
     try {
       const data = await api.get<User[] | { results: User[] }>(endpoints.fieldResources);
       const resourceList = Array.isArray(data) ? data : (data.results || []);
       setResources(resourceList);
     } catch (error) {
       console.error('Error loading resources:', error);
+      setError('Failed to load resources');
     }
     setLoading(false);
   };
@@ -101,51 +107,61 @@ export const ResourcesPage: React.FC = () => {
         is_available: true,
       });
       setShowModal(false);
+      setSuccess('Resource added successfully!');
       
       // Reload resources
       loadResources();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create resource');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.detail 
+        || Object.values(err.response?.data || {}).flat().join(', ')
+        || err.message 
+        || 'Failed to create resource';
+      setError(errorMsg);
     }
     setSubmitting(false);
   };
 
-  const columns = [
-    { 
-      key: 'first_name' as const, 
-      label: 'Name',
-      render: (_: unknown, row: User) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-            <span className="text-emerald-700 font-semibold">
-              {row.first_name?.[0] || row.username?.[0]}
-            </span>
-          </div>
-          <div>
-            <p className="font-medium">{row.first_name} {row.last_name}</p>
-            <p className="text-sm text-gray-500">{row.email}</p>
-          </div>
-        </div>
-      )
-    },
-    { key: 'phone' as const, label: 'Phone' },
-    { key: 'city' as const, label: 'Location' },
-    { key: 'languages_known' as const, label: 'Languages' },
-    { 
-      key: 'is_available' as const, 
-      label: 'Status',
-      render: (val: unknown) => (
-        <Badge variant={val ? 'success' : 'danger'}>
-          {val ? 'Available' : 'Occupied'}
-        </Badge>
-      )
-    },
-    { key: 'experience_years' as const, label: 'Experience (yrs)' },
-  ];
+  const handleDelete = async (resource: User) => {
+    try {
+      await api.delete(`${endpoints.users}${resource.id}/`);
+      setSuccess('Resource deleted successfully!');
+      setDeleteConfirm(null);
+      loadResources();
+    } catch (err) {
+      setError('Failed to delete resource');
+    }
+  };
+
+  const getFullName = (resource: User): string => {
+    const name = `${resource.first_name || ''} ${resource.last_name || ''}`.trim();
+    return name || resource.username || 'Unknown';
+  };
+
+  const getInitials = (resource: User): string => {
+    if (resource.first_name && resource.last_name) {
+      return `${resource.first_name[0]}${resource.last_name[0]}`.toUpperCase();
+    }
+    return (resource.username?.[0] || resource.email?.[0] || 'U').toUpperCase();
+  };
+
+  // Filter resources
+  const filteredResources = resources.filter(r => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      r.first_name?.toLowerCase().includes(term) ||
+      r.last_name?.toLowerCase().includes(term) ||
+      r.email?.toLowerCase().includes(term) ||
+      r.username?.toLowerCase().includes(term) ||
+      r.phone?.toLowerCase().includes(term) ||
+      r.city?.toLowerCase().includes(term)
+    );
+  });
 
   const availableCount = resources.filter(r => r.is_available).length;
   const occupiedCount = resources.filter(r => !r.is_available).length;
 
+  // View switch handlers
   if (view === 'assignments') {
     return <ResourceAssignmentsPage onBack={() => setView('resources')} />;
   }
@@ -186,6 +202,7 @@ export const ResourcesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Field Resources</h1>
@@ -206,6 +223,20 @@ export const ResourcesPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Alerts */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">×</button>
+        </div>
+      )}
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{success}</span>
+          <button onClick={() => setSuccess('')} className="text-green-500 hover:text-green-700">×</button>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -244,11 +275,127 @@ export const ResourcesPage: React.FC = () => {
         </Card>
       </div>
 
+      {/* Search & Filters */}
       <Card className="p-4">
-        <DataTable columns={columns} data={resources} loading={loading} />
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex-1 min-w-[250px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by name, email, phone, city..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+          <Button variant="secondary" onClick={loadResources}>
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </Button>
+        </div>
       </Card>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Field Resource">
+      {/* Resources Table */}
+      <Card>
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : filteredResources.length === 0 ? (
+          <div className="text-center py-12">
+            <Users className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">No resources found</h3>
+            <p className="text-gray-500 mt-1">
+              {searchTerm ? 'Try a different search term' : 'Get started by adding a field resource'}
+            </p>
+            {!searchTerm && (
+              <Button className="mt-4" onClick={() => setShowModal(true)}>
+                <Plus className="w-4 h-4" /> Add Resource
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Name</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Phone</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Location</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Languages</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Experience (yrs)</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredResources.map((resource) => (
+                  <tr key={resource.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                          <span className="text-emerald-700 font-semibold">
+                            {getInitials(resource)}
+                          </span>
+                        </div>
+                        <div>
+                          <button
+                            onClick={() => navigate(`/resources/${resource.id}`)}
+                            className="font-medium text-gray-900 hover:text-indigo-600"
+                          >
+                            {getFullName(resource)}
+                          </button>
+                          <p className="text-sm text-gray-500">{resource.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">{resource.phone || '-'}</td>
+                    <td className="px-4 py-4 text-gray-600">
+                      {resource.city ? `${resource.city}${resource.state ? `, ${resource.state}` : ''}` : '-'}
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">{resource.languages_known || '-'}</td>
+                    <td className="px-4 py-4">
+                      <Badge variant={resource.is_available ? 'success' : 'warning'}>
+                        {resource.is_available ? 'Available' : 'Occupied'}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">{resource.experience_years || 0}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => navigate(`/resources/${resource.id}`)}
+                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                          title="View Profile"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/resources/${resource.id}/edit`)}
+                          className="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(resource)}
+                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      {/* Add Resource Modal */}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Field Resource" size="lg">
         <form className="space-y-4" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
@@ -392,7 +539,7 @@ export const ResourcesPage: React.FC = () => {
             </label>
           </div>
           
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 border-t">
             <Button 
               variant="secondary" 
               type="button" 
@@ -406,6 +553,39 @@ export const ResourcesPage: React.FC = () => {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Delete Field Resource">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
+            <Trash2 className="h-6 w-6 text-red-600 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-red-800">This action cannot be undone</p>
+              <p className="text-sm text-red-600 mt-1">
+                Deleting this resource will remove their account and all associated data.
+              </p>
+            </div>
+          </div>
+          
+          {deleteConfirm && (
+            <p className="text-gray-600">
+              Are you sure you want to delete <strong>"{getFullName(deleteConfirm)}"</strong>?
+            </p>
+          )}
+
+          <div className="flex gap-3 pt-4 border-t">
+            <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Resource
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

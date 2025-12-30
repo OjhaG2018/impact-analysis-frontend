@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Download, Edit, Eye, Trash2, Building2, Users } from 'lucide-react';
 import api, { endpoints } from '../../api';
 import { Project, PaginatedResponse, ProjectStatus, ProjectSector } from '../../types';
@@ -8,6 +9,7 @@ import ClientsPage from './ClientsPage';
 import ProjectBeneficiariesPage from './ProjectBeneficiariesPage';
 
 const ProjectsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<'projects' | 'clients' | 'beneficiaries'>('projects');
   const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -335,10 +337,7 @@ const ProjectsPage: React.FC = () => {
       render: (_: unknown, row: Project) => (
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              setSelectedProject(row);
-              setShowViewModal(true);
-            }}
+            onClick={() => navigate(`/projects/${row.id}`)}
             className="text-blue-600 hover:text-blue-800 p-1"
             title="View Details"
           >

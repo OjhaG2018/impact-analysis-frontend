@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Search, Download, Upload, Eye, Edit, Trash2, 
   Users, MapPin, Phone, User, Filter, RefreshCw,
@@ -89,6 +90,7 @@ const emptyBeneficiary = {
 import BeneficiaryAssignmentsView from './BeneficiaryAssignmentsView';
 
 const BeneficiariesPage: React.FC = () => {
+  const navigate = useNavigate();
   // State
   const [view, setView] = useState<'beneficiaries' | 'assignments'>('beneficiaries');
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
@@ -106,7 +108,6 @@ const BeneficiariesPage: React.FC = () => {
 
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSampleModal, setShowSampleModal] = useState(false);
@@ -225,30 +226,6 @@ const BeneficiariesPage: React.FC = () => {
     setSubmitting(false);
   };
 
-  const handleEditBeneficiary = async () => {
-    if (!selectedBeneficiary) return;
-
-    setSubmitting(true);
-    try {
-      const payload: any = {
-        ...formData,
-        project: parseInt(formData.project),
-        age: formData.age ? parseInt(formData.age as string) : null,
-        annual_income: formData.annual_income ? parseFloat(formData.annual_income as string) : null,
-        grant_amount_received: formData.grant_amount_received ? parseFloat(formData.grant_amount_received as string) : null,
-      };
-
-      await api.patch(`${endpoints.beneficiaries}${selectedBeneficiary.id}/`, payload);
-      setSuccess('Beneficiary updated successfully');
-      setShowEditModal(false);
-      loadBeneficiaries();
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Failed to update beneficiary';
-      setError(errorMsg);
-    }
-    setSubmitting(false);
-  };
-
   const handleDeleteBeneficiary = async (beneficiary: Beneficiary) => {
     if (!window.confirm(`Are you sure you want to delete ${beneficiary.name}? This action cannot be undone.`)) {
       return;
@@ -261,32 +238,6 @@ const BeneficiariesPage: React.FC = () => {
     } catch (err: any) {
       setError('Failed to delete beneficiary');
     }
-  };
-
-  const openEditModal = (beneficiary: Beneficiary) => {
-    setSelectedBeneficiary(beneficiary);
-    setFormData({
-      project: beneficiary.project.toString(),
-      beneficiary_id: beneficiary.beneficiary_id,
-      name: beneficiary.name,
-      father_husband_name: beneficiary.father_husband_name || '',
-      gender: beneficiary.gender || '',
-      age: beneficiary.age?.toString() || '',
-      phone: beneficiary.phone || '',
-      village: beneficiary.village || '',
-      block: beneficiary.block || '',
-      district: beneficiary.district || '',
-      state: beneficiary.state || '',
-      pincode: beneficiary.pincode || '',
-      category: beneficiary.category || '',
-      bpl_status: beneficiary.bpl_status || false,
-      occupation: beneficiary.occupation || '',
-      annual_income: beneficiary.annual_income?.toString() || '',
-      grant_amount_received: beneficiary.grant_amount_received?.toString() || '',
-      grant_received_date: beneficiary.grant_received_date || '',
-      grant_purpose: beneficiary.grant_purpose || '',
-    });
-    setShowEditModal(true);
   };
 
   const openViewModal = (beneficiary: Beneficiary) => {
@@ -693,18 +644,11 @@ const BeneficiariesPage: React.FC = () => {
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => openViewModal(beneficiary)}
+                          onClick={() => navigate(`/beneficiaries/${beneficiary.id}`)}
                           className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => openEditModal(beneficiary)}
-                          className="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => toggleSampledStatus(beneficiary)}
@@ -734,11 +678,11 @@ const BeneficiariesPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Create/Edit Modal */}
+      {/* Create Modal */}
       <Modal 
-        isOpen={showCreateModal || showEditModal} 
-        onClose={() => { setShowCreateModal(false); setShowEditModal(false); }}
-        title={showEditModal ? 'Edit Beneficiary' : 'Add New Beneficiary'}
+        isOpen={showCreateModal} 
+        onClose={() => setShowCreateModal(false)}
+        title="Add New Beneficiary"
         size="lg"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -893,11 +837,11 @@ const BeneficiariesPage: React.FC = () => {
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-          <Button variant="secondary" onClick={() => { setShowCreateModal(false); setShowEditModal(false); }}>
+          <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
             Cancel
           </Button>
-          <Button onClick={showEditModal ? handleEditBeneficiary : handleCreateBeneficiary} disabled={submitting}>
-            {submitting ? 'Saving...' : showEditModal ? 'Update' : 'Create'}
+          <Button onClick={handleCreateBeneficiary} disabled={submitting}>
+            {submitting ? 'Saving...' : 'Create'}
           </Button>
         </div>
       </Modal>
@@ -974,11 +918,7 @@ const BeneficiariesPage: React.FC = () => {
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button variant="secondary" onClick={() => setShowViewModal(false)}>
                 Close
-              </Button>
-              <Button onClick={() => { setShowViewModal(false); openEditModal(selectedBeneficiary); }}>
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
+                </Button>
             </div>
           </div>
         )}

@@ -1,6 +1,11 @@
-// src/pages/QuestionnairesPage.tsx
+// src/features/questionnaires/QuestionnairesPage.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, ClipboardList, Edit, Eye, Trash2, Copy, Download, ChevronDown, ChevronUp, Search, Filter, Sparkles } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  Plus, ClipboardList, Edit, Eye, Trash2, Copy, Download, ChevronDown, ChevronUp,
+  Search, Sparkles, ArrowLeft, GripVertical, FileText, Clock,
+  CheckCircle, AlertCircle, BookOpen, Layers
+} from 'lucide-react';
 import { questionnaireApi } from '../../api';
 import {
   QuestionnaireTemplate,
@@ -19,31 +24,10 @@ import {
   SENSITIVITY_LABELS,
   SECTOR_COLORS,
 } from '../../types';
-import { Card, Button, Input, Select, Modal, Badge, Textarea, LoadingSpinner } from '../../components/ui';
+import { Card, Button, Input, Select, Modal, Badge, LoadingSpinner } from '../../components/ui';
 
 // ============== TYPES ==============
 type ViewMode = 'list' | 'detail';
-
-interface SectionFormData {
-  title: string;
-  description: string;
-  section_type: SectionType;
-  order: number;
-  is_conditional: boolean;
-  ai_section_intro: string;
-}
-
-interface QuestionFormData {
-  text: string;
-  help_text: string;
-  question_type: QuestionType;
-  category: QuestionCategory;
-  options: string[];
-  is_required: boolean;
-  order: number;
-  sensitivity_level: SensitivityLevel;
-  ai_probing_hints: string;
-}
 
 // ============== OPTIONS ==============
 const sectorOptions = Object.entries(SECTOR_LABELS).map(([value, label]) => ({
@@ -95,6 +79,9 @@ const sensitivityOptions = Object.entries(SENSITIVITY_LABELS).map(([value, label
 
 // ============== MAIN COMPONENT ==============
 const QuestionnairesPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   // View State
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedTemplate, setSelectedTemplate] = useState<QuestionnaireTemplate | null>(null);
@@ -105,15 +92,18 @@ const QuestionnairesPage: React.FC = () => {
   const [statistics, setStatistics] = useState<QuestionnaireStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Filter State
-  const [sectorFilter, setSectorFilter] = useState<string>('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
-  const [aiEnabledFilter, setAiEnabledFilter] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    sector: searchParams.get('sector') || '',
+    template_type: searchParams.get('type') || '',
+    ai_enabled: searchParams.get('ai') || '',
+    search: '',
+  });
 
   // Modal State
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showSectionModal, setShowSectionModal] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -121,10 +111,10 @@ const QuestionnairesPage: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [activeSection, setActiveSection] = useState<QuestionnaireSection | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; item: any } | null>(null);
 
-  // Template Form State
+  // Template Form
   const [templateForm, setTemplateForm] = useState({
-    id: null as number | null,
     name: '',
     description: '',
     sector: 'general' as QuestionnaireSector,
@@ -136,52 +126,49 @@ const QuestionnairesPage: React.FC = () => {
     estimated_duration_minutes: 30,
   });
 
-  // Section Form State
-  const [sectionForm, setSectionForm] = useState<SectionFormData>({
+  // Section Form
+  const [sectionForm, setSectionForm] = useState({
     title: '',
     description: '',
-    section_type: 'custom',
+    section_type: 'custom' as SectionType,
     order: 0,
     is_conditional: false,
     ai_section_intro: '',
   });
 
-  // Question Form State
-  const [questionForm, setQuestionForm] = useState<QuestionFormData>({
+  // Question Form
+  const [questionForm, setQuestionForm] = useState({
     text: '',
     help_text: '',
-    question_type: 'text',
-    category: 'custom',
-    options: [],
+    question_type: 'text' as QuestionType,
+    category: 'custom' as QuestionCategory,
+    options: [] as string[],
     is_required: true,
     order: 0,
-    sensitivity_level: 'low',
+    sensitivity_level: 'low' as SensitivityLevel,
     ai_probing_hints: '',
   });
-
   const [optionsText, setOptionsText] = useState('');
 
   // ============== DATA FETCHING ==============
   const fetchTemplates = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const params: Record<string, string | boolean | undefined> = {};
-      
-      if (sectorFilter) params.sector = sectorFilter;
-      if (typeFilter) params.template_type = typeFilter;
-      if (aiEnabledFilter) params.ai_interview_enabled = aiEnabledFilter === 'true';
-      if (searchQuery) params.search = searchQuery;
+      const params: any = {};
+      if (filters.sector) params.sector = filters.sector;
+      if (filters.template_type) params.template_type = filters.template_type;
+      if (filters.ai_enabled) params.ai_interview_enabled = filters.ai_enabled === 'true';
+      if (filters.search) params.search = filters.search;
 
       const response = await questionnaireApi.getTemplates(params);
       setTemplates(response.results || []);
       setError(null);
     } catch (err: any) {
       console.error('Error loading templates:', err);
-      setError(err.message || 'Failed to fetch templates');
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Failed to load templates');
     }
-  }, [sectorFilter, typeFilter, aiEnabledFilter, searchQuery]);
+    setLoading(false);
+  }, [filters]);
 
   const fetchStatistics = async () => {
     try {
@@ -193,17 +180,19 @@ const QuestionnairesPage: React.FC = () => {
   };
 
   const fetchTemplateDetail = async (id: number) => {
+    setLoading(true);
     try {
-      setLoading(true);
       const data = await questionnaireApi.getTemplate(id);
       setSelectedTemplate(data);
       setViewMode('detail');
+      if (data.sections && data.sections.length > 0) {
+        setExpandedSections(new Set([data.sections[0].id]));
+      }
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch template');
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Failed to load template');
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -211,10 +200,16 @@ const QuestionnairesPage: React.FC = () => {
     fetchStatistics();
   }, [fetchTemplates]);
 
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   // ============== TEMPLATE HANDLERS ==============
   const resetTemplateForm = () => {
     setTemplateForm({
-      id: null,
       name: '',
       description: '',
       sector: 'general',
@@ -226,86 +221,88 @@ const QuestionnairesPage: React.FC = () => {
       estimated_duration_minutes: 30,
     });
     setIsEditMode(false);
-    setError(null);
   };
 
   const handleTemplateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!templateForm.name.trim()) {
+      setError('Template name is required');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
     try {
-      const payload = {
-        name: templateForm.name,
-        description: templateForm.description,
-        sector: templateForm.sector,
-        template_type: templateForm.template_type,
-        version: templateForm.version,
-        is_default: templateForm.is_default,
-        is_active: templateForm.is_active,
-        ai_interview_enabled: templateForm.ai_interview_enabled,
-        estimated_duration_minutes: templateForm.estimated_duration_minutes,
-      };
-
-      if (isEditMode && templateForm.id) {
-        await questionnaireApi.updateTemplate(templateForm.id, payload);
+      if (isEditMode && selectedTemplate) {
+        await questionnaireApi.updateTemplate(selectedTemplate.id, templateForm);
+        setSuccess('Template updated successfully!');
+        fetchTemplateDetail(selectedTemplate.id);
       } else {
-        await questionnaireApi.createTemplate(payload);
+        await questionnaireApi.createTemplate(templateForm);
+        setSuccess('Template created successfully!');
       }
-
       resetTemplateForm();
-      setShowCreateModal(false);
+      setShowTemplateModal(false);
       fetchTemplates();
       fetchStatistics();
     } catch (err: any) {
-      console.error('Error saving template:', err);
-      setError(err.message || 'Failed to save template');
+      const errorMsg = err.response?.data?.detail
+        || Object.values(err.response?.data || {}).flat().join(', ')
+        || err.message
+        || 'Failed to save template';
+      setError(errorMsg);
     }
     setSubmitting(false);
   };
 
   const handleEditTemplate = (template: QuestionnaireTemplate) => {
     setTemplateForm({
-      id: template.id,
-      name: template.name || '',
+      name: template.name,
       description: template.description || '',
-      sector: template.sector || 'general',
-      template_type: template.template_type || 'baseline',
+      sector: template.sector,
+      template_type: template.template_type,
       version: template.version || '1.0',
-      is_default: template.is_default || false,
-      is_active: template.is_active !== false,
-      ai_interview_enabled: template.ai_interview_enabled !== false,
+      is_default: template.is_default,
+      is_active: template.is_active,
+      ai_interview_enabled: template.ai_interview_enabled,
       estimated_duration_minutes: template.estimated_duration_minutes || 30,
     });
     setIsEditMode(true);
-    setShowCreateModal(true);
+    setShowTemplateModal(true);
   };
 
-  const handleClone = async (template: QuestionnaireTemplate) => {
-    if (!window.confirm(`Clone "${template.name}"?`)) return;
-    
+  const handleCloneTemplate = async (template: QuestionnaireTemplate) => {
     try {
       await questionnaireApi.cloneTemplate(template.id);
+      setSuccess(`Template "${template.name}" cloned successfully!`);
       fetchTemplates();
       fetchStatistics();
     } catch (err: any) {
-      alert(err.message || 'Failed to clone template');
+      setError(err.message || 'Failed to clone template');
     }
   };
 
-  const handleDelete = async (template: QuestionnaireTemplate) => {
-    if (!window.confirm(`Delete "${template.name}"? This cannot be undone.`)) return;
-    
+  const handleDeleteTemplate = async () => {
+    if (!deleteConfirm || deleteConfirm.type !== 'template') return;
+    const template = deleteConfirm.item as QuestionnaireTemplate;
+
     try {
       await questionnaireApi.deleteTemplate(template.id);
+      setSuccess('Template deleted successfully!');
+      setDeleteConfirm(null);
+      if (viewMode === 'detail') {
+        setViewMode('list');
+        setSelectedTemplate(null);
+      }
       fetchTemplates();
       fetchStatistics();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete template');
+      setError(err.message || 'Failed to delete template');
     }
   };
 
-  const handleExport = async (template: QuestionnaireTemplate) => {
+  const handleExportTemplate = async (template: QuestionnaireTemplate) => {
     try {
       const data = await questionnaireApi.exportTemplate(template.id);
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -315,8 +312,9 @@ const QuestionnairesPage: React.FC = () => {
       a.download = `${template.name.replace(/\s+/g, '_')}_v${template.version}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      setSuccess('Template exported!');
     } catch (err: any) {
-      alert(err.message || 'Failed to export template');
+      setError(err.message || 'Failed to export template');
     }
   };
 
@@ -338,11 +336,11 @@ const QuestionnairesPage: React.FC = () => {
       setEditingSection(section);
       setSectionForm({
         title: section.title,
-        description: section.description,
+        description: section.description || '',
         section_type: section.section_type,
         order: section.order,
         is_conditional: section.is_conditional,
-        ai_section_intro: section.ai_section_intro,
+        ai_section_intro: section.ai_section_intro || '',
       });
     } else {
       setEditingSection(null);
@@ -360,36 +358,44 @@ const QuestionnairesPage: React.FC = () => {
   };
 
   const handleSaveSection = async () => {
-    if (!selectedTemplate) return;
+    if (!selectedTemplate || !sectionForm.title.trim()) {
+      setError('Section title is required');
+      return;
+    }
+
     setSubmitting(true);
-    
     try {
       if (editingSection) {
         await questionnaireApi.updateSection(editingSection.id, sectionForm);
+        setSuccess('Section updated!');
       } else {
         await questionnaireApi.createSection({
           ...sectionForm,
           template: selectedTemplate.id,
         });
+        setSuccess('Section added!');
       }
       setShowSectionModal(false);
       fetchTemplateDetail(selectedTemplate.id);
     } catch (err: any) {
-      alert(err.message || 'Failed to save section');
+      setError(err.message || 'Failed to save section');
     }
     setSubmitting(false);
   };
 
-  const handleDeleteSection = async (section: QuestionnaireSection) => {
-    if (!window.confirm(`Delete section "${section.title}"?`)) return;
-    
+  const handleDeleteSection = async () => {
+    if (!deleteConfirm || deleteConfirm.type !== 'section') return;
+    const section = deleteConfirm.item as QuestionnaireSection;
+
     try {
       await questionnaireApi.deleteSection(section.id);
+      setSuccess('Section deleted!');
+      setDeleteConfirm(null);
       if (selectedTemplate) {
         fetchTemplateDetail(selectedTemplate.id);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to delete section');
+      setError(err.message || 'Failed to delete section');
     }
   };
 
@@ -400,14 +406,14 @@ const QuestionnairesPage: React.FC = () => {
       setEditingQuestion(question);
       setQuestionForm({
         text: question.text,
-        help_text: question.help_text,
+        help_text: question.help_text || '',
         question_type: question.question_type,
         category: question.category,
-        options: question.options,
+        options: question.options || [],
         is_required: question.is_required,
         order: question.order,
         sensitivity_level: question.sensitivity_level,
-        ai_probing_hints: question.ai_probing_hints,
+        ai_probing_hints: question.ai_probing_hints || '',
       });
       setOptionsText(question.options?.join('\n') || '');
     } else {
@@ -430,49 +436,55 @@ const QuestionnairesPage: React.FC = () => {
   };
 
   const handleSaveQuestion = async () => {
-    if (!activeSection || !selectedTemplate) return;
+    if (!activeSection || !selectedTemplate || !questionForm.text.trim()) {
+      setError('Question text is required');
+      return;
+    }
+
     setSubmitting(true);
-    
     try {
       const options = optionsText.split('\n').filter(o => o.trim());
       const data = { ...questionForm, options };
-      
+
       if (editingQuestion) {
         await questionnaireApi.updateQuestion(editingQuestion.id, data);
+        setSuccess('Question updated!');
       } else {
         await questionnaireApi.createQuestion({
           ...data,
           section: activeSection.id,
         });
+        setSuccess('Question added!');
       }
       setShowQuestionModal(false);
       fetchTemplateDetail(selectedTemplate.id);
     } catch (err: any) {
-      alert(err.message || 'Failed to save question');
+      setError(err.message || 'Failed to save question');
     }
     setSubmitting(false);
   };
 
-  const handleDeleteQuestion = async (question: Question) => {
-    if (!window.confirm('Delete this question?')) return;
-    
+  const handleDeleteQuestion = async () => {
+    if (!deleteConfirm || deleteConfirm.type !== 'question') return;
+    const question = deleteConfirm.item as Question;
+
     try {
       await questionnaireApi.deleteQuestion(question.id);
+      setSuccess('Question deleted!');
+      setDeleteConfirm(null);
       if (selectedTemplate) {
         fetchTemplateDetail(selectedTemplate.id);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to delete question');
+      setError(err.message || 'Failed to delete question');
     }
   };
 
   // ============== HELPERS ==============
-  const getSectorColor = (sector: string) => {
-    return SECTOR_COLORS[sector as QuestionnaireSector] || '#6B7280';
-  };
+  const getSectorColor = (sector: string) => SECTOR_COLORS[sector as QuestionnaireSector] || '#6b7280';
 
-  const getSectorBgClass = (sector: string) => {
-    const colors: Record<string, string> = {
+  const getSectorBgClass = (sector: string): string => {
+    const classes: Record<string, string> = {
       agriculture: 'bg-green-100 text-green-700',
       education: 'bg-blue-100 text-blue-700',
       healthcare: 'bg-red-100 text-red-700',
@@ -484,7 +496,7 @@ const QuestionnairesPage: React.FC = () => {
       child_welfare: 'bg-orange-100 text-orange-700',
       general: 'bg-gray-100 text-gray-700',
     };
-    return colors[sector] || 'bg-gray-100 text-gray-700';
+    return classes[sector] || 'bg-gray-100 text-gray-700';
   };
 
   // ============== RENDER: STATISTICS ==============
@@ -494,20 +506,48 @@ const QuestionnairesPage: React.FC = () => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
-          <div className="text-2xl font-bold text-blue-600">{statistics.total_templates}</div>
-          <div className="text-sm text-gray-500">Total Templates</div>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <FileText className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{statistics.total_templates}</p>
+              <p className="text-sm text-gray-500">Total Templates</p>
+            </div>
+          </div>
         </Card>
         <Card className="p-4">
-          <div className="text-2xl font-bold text-green-600">{statistics.active_templates}</div>
-          <div className="text-sm text-gray-500">Active Templates</div>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{statistics.active_templates}</p>
+              <p className="text-sm text-gray-500">Active</p>
+            </div>
+          </div>
         </Card>
         <Card className="p-4">
-          <div className="text-2xl font-bold text-purple-600">{statistics.ai_enabled_templates}</div>
-          <div className="text-sm text-gray-500">AI-Enabled</div>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{statistics.ai_enabled_templates}</p>
+              <p className="text-sm text-gray-500">AI-Enabled</p>
+            </div>
+          </div>
         </Card>
         <Card className="p-4">
-          <div className="text-2xl font-bold text-orange-600">{statistics.total_questions}</div>
-          <div className="text-sm text-gray-500">Total Questions</div>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <ClipboardList className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{statistics.total_questions}</p>
+              <p className="text-sm text-gray-500">Total Questions</p>
+            </div>
+          </div>
         </Card>
       </div>
     );
@@ -516,52 +556,38 @@ const QuestionnairesPage: React.FC = () => {
   // ============== RENDER: FILTERS ==============
   const renderFilters = () => (
     <Card className="p-4 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            <Search className="w-4 h-4 inline mr-1" />
-            Search
-          </label>
-          <Input
-            placeholder="Search templates..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="md:col-span-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            <Filter className="w-4 h-4 inline mr-1" />
-            Sector
-          </label>
-          <Select
-            value={sectorFilter}
-            onChange={(e) => setSectorFilter(e.target.value)}
-            options={[{ value: '', label: 'All Sectors' }, ...sectorOptions]}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-          <Select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            options={[{ value: '', label: 'All Types' }, ...templateTypeOptions]}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            <Sparkles className="w-4 h-4 inline mr-1" />
-            AI Interview
-          </label>
-          <Select
-            value={aiEnabledFilter}
-            onChange={(e) => setAiEnabledFilter(e.target.value)}
-            options={[
-              { value: '', label: 'All' },
-              { value: 'true', label: 'AI Enabled' },
-              { value: 'false', label: 'AI Disabled' },
-            ]}
-          />
-        </div>
+        <Select
+          value={filters.sector}
+          onChange={(e) => setFilters({ ...filters, sector: e.target.value })}
+          options={[{ value: '', label: 'All Sectors' }, ...sectorOptions]}
+        />
+        <Select
+          value={filters.template_type}
+          onChange={(e) => setFilters({ ...filters, template_type: e.target.value })}
+          options={[{ value: '', label: 'All Types' }, ...templateTypeOptions]}
+        />
+        <Select
+          value={filters.ai_enabled}
+          onChange={(e) => setFilters({ ...filters, ai_enabled: e.target.value })}
+          options={[
+            { value: '', label: 'All' },
+            { value: 'true', label: 'AI Enabled' },
+            { value: 'false', label: 'AI Disabled' },
+          ]}
+        />
       </div>
     </Card>
   );
@@ -571,26 +597,21 @@ const QuestionnairesPage: React.FC = () => {
     <div>
       {renderStatistics()}
       {renderFilters()}
-      
+
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <LoadingSpinner />
         </div>
-      ) : error ? (
-        <Card className="p-8 text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={fetchTemplates}>Retry</Button>
-        </Card>
       ) : templates.length === 0 ? (
-        <Card className="p-8 text-center">
+        <Card className="p-12 text-center">
           <ClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No Templates Found</h3>
           <p className="text-gray-600 mb-4">
-            {searchQuery || sectorFilter || typeFilter 
+            {filters.search || filters.sector || filters.template_type
               ? 'Try adjusting your filters'
               : 'Get started by creating your first questionnaire template'}
           </p>
-          <Button onClick={() => { resetTemplateForm(); setShowCreateModal(true); }}>
+          <Button onClick={() => { resetTemplateForm(); setShowTemplateModal(true); }}>
             <Plus className="w-4 h-4" /> Create Template
           </Button>
         </Card>
@@ -599,15 +620,15 @@ const QuestionnairesPage: React.FC = () => {
           {templates.map((template) => (
             <Card key={template.id} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start gap-4">
-                <div 
-                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${getSectorColor(template.sector)}20` }}
                 >
                   <ClipboardList className="w-6 h-6" style={{ color: getSectorColor(template.sector) }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 
+                    <h3
                       className="font-semibold text-gray-900 truncate cursor-pointer hover:text-emerald-600"
                       onClick={() => fetchTemplateDetail(template.id)}
                     >
@@ -616,24 +637,22 @@ const QuestionnairesPage: React.FC = () => {
                     <div className="flex gap-1 flex-shrink-0">
                       {template.is_default && <Badge variant="info">Default</Badge>}
                       {template.ai_interview_enabled && (
-                        <Badge variant="success">
-                          <Sparkles className="w-3 h-3" />
-                        </Badge>
+                        <Badge variant="success"><Sparkles className="w-3 h-3" /></Badge>
                       )}
                     </div>
                   </div>
-                  
-                  <p className="text-sm text-gray-600 mt-1">
+
+                  <p className="text-sm mt-1">
                     <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getSectorBgClass(template.sector)}`}>
-                      {template.sector_display || SECTOR_LABELS[template.sector as QuestionnaireSector] || template.sector}
+                      {template.sector_display || SECTOR_LABELS[template.sector]}
                     </span>
                   </p>
-                  
+
                   <p className="text-sm text-gray-500 mt-2 line-clamp-2">{template.description}</p>
-                  
+
                   <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                    <span>{template.total_sections || 0} sections</span>
-                    <span>{template.total_questions || 0} questions</span>
+                    <span>{template.section_count || template.total_sections || 0} sections</span>
+                    <span>{template.question_count || template.total_questions || 0} questions</span>
                     <span>v{template.version}</span>
                   </div>
 
@@ -651,20 +670,20 @@ const QuestionnairesPage: React.FC = () => {
                       <Edit className="w-3.5 h-3.5" /> Edit
                     </button>
                     <button
-                      onClick={() => handleClone(template)}
+                      onClick={() => handleCloneTemplate(template)}
                       className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
                     >
                       <Copy className="w-3.5 h-3.5" /> Clone
                     </button>
                     <button
-                      onClick={() => handleExport(template)}
+                      onClick={() => handleExportTemplate(template)}
                       className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800"
                     >
                       <Download className="w-3.5 h-3.5" />
                     </button>
                     {!template.is_default && (
                       <button
-                        onClick={() => handleDelete(template)}
+                        onClick={() => setDeleteConfirm({ type: 'template', item: template })}
                         className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 ml-auto"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -677,9 +696,9 @@ const QuestionnairesPage: React.FC = () => {
           ))}
 
           {/* Add new template card */}
-          <Card 
+          <Card
             className="p-6 border-2 border-dashed border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 transition-all cursor-pointer flex items-center justify-center min-h-[280px]"
-            onClick={() => { resetTemplateForm(); setShowCreateModal(true); }}
+            onClick={() => { resetTemplateForm(); setShowTemplateModal(true); }}
           >
             <div className="text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -706,19 +725,19 @@ const QuestionnairesPage: React.FC = () => {
             <div>
               <button
                 onClick={() => { setViewMode('list'); setSelectedTemplate(null); }}
-                className="text-blue-600 hover:text-blue-800 mb-2 flex items-center gap-1 text-sm"
+                className="text-gray-600 hover:text-gray-800 mb-3 flex items-center gap-1 text-sm"
               >
-                ← Back to Templates
+                <ArrowLeft className="w-4 h-4" /> Back to Templates
               </button>
               <h1 className="text-2xl font-bold text-gray-900">{selectedTemplate.name}</h1>
               <p className="text-gray-500 mt-1">{selectedTemplate.description}</p>
-              
+
               <div className="flex flex-wrap items-center gap-2 mt-4">
                 <span className={`px-3 py-1 rounded text-sm font-medium ${getSectorBgClass(selectedTemplate.sector)}`}>
-                  {selectedTemplate.sector_display || SECTOR_LABELS[selectedTemplate.sector as QuestionnaireSector]}
+                  {selectedTemplate.sector_display || SECTOR_LABELS[selectedTemplate.sector]}
                 </span>
                 <Badge variant="default">
-                  {selectedTemplate.template_type_display || TEMPLATE_TYPE_LABELS[selectedTemplate.template_type as TemplateType]}
+                  {selectedTemplate.template_type_display || TEMPLATE_TYPE_LABELS[selectedTemplate.template_type]}
                 </Badge>
                 <span className="text-sm text-gray-500">v{selectedTemplate.version}</span>
                 {selectedTemplate.ai_interview_enabled && (
@@ -727,15 +746,16 @@ const QuestionnairesPage: React.FC = () => {
                   </Badge>
                 )}
                 {selectedTemplate.estimated_duration_minutes && (
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-500 flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
                     ~{selectedTemplate.estimated_duration_minutes} min
                   </span>
                 )}
               </div>
             </div>
-            
+
             <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => handleEditTemplate(selectedTemplate)}>
+              <Button variant="outline" onClick={() => handleEditTemplate(selectedTemplate)}>
                 <Edit className="w-4 h-4" /> Edit
               </Button>
               <Button onClick={() => openSectionModal()}>
@@ -747,65 +767,76 @@ const QuestionnairesPage: React.FC = () => {
 
         {/* Sections */}
         <div className="space-y-4">
-          {selectedTemplate.sections?.map((section) => (
+          {selectedTemplate.sections?.map((section, sIdx) => (
             <Card key={section.id} className="overflow-hidden">
               <div
                 className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
                 onClick={() => toggleSection(section.id)}
               >
                 <div className="flex items-center gap-3">
+                  <GripVertical className="w-5 h-5 text-gray-300" />
                   {expandedSections.has(section.id) ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
                   ) : (
                     <ChevronDown className="w-5 h-5 text-gray-400" />
                   )}
                   <div>
-                    <h3 className="font-semibold text-gray-900">{section.title}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {sIdx + 1}. {section.title}
+                    </h3>
                     <p className="text-sm text-gray-500">
                       {section.question_count || section.questions?.length || 0} questions
                       {section.section_type && section.section_type !== 'custom' && (
                         <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded">
-                          {section.section_type}
+                          {section.section_type.replace('_', ' ')}
                         </span>
                       )}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                  <Button size="sm" variant="secondary" onClick={() => openQuestionModal(section)}>
+                  <Button size="sm" variant="outline" onClick={() => openQuestionModal(section)}>
                     <Plus className="w-3 h-3" /> Question
                   </Button>
-                  <Button size="sm" variant="secondary" onClick={() => openSectionModal(section)}>
+                  <Button size="sm" variant="outline" onClick={() => openSectionModal(section)}>
                     <Edit className="w-3 h-3" />
                   </Button>
-                  <Button size="sm" variant="secondary" onClick={() => handleDeleteSection(section)}>
-                    <Trash2 className="w-3 h-3 text-red-500" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setDeleteConfirm({ type: 'section', item: section })}
+                    className="text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
               </div>
-              
-              {expandedSections.has(section.id) && section.questions && (
+
+              {expandedSections.has(section.id) && (
                 <div className="border-t bg-gray-50">
-                  {section.questions.length === 0 ? (
-                    <div className="p-6 text-center text-gray-500">
-                      No questions in this section.
+                  {!section.questions || section.questions.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      <ClipboardList className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                      <p>No questions in this section.</p>
                       <button
                         onClick={() => openQuestionModal(section)}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
+                        className="mt-2 text-emerald-600 hover:text-emerald-700 font-medium"
                       >
-                        Add one
+                        Add first question
                       </button>
                     </div>
                   ) : (
-                    section.questions.map((question, idx) => (
+                    section.questions.map((question, qIdx) => (
                       <div
                         key={question.id}
                         className="p-4 border-b last:border-b-0 bg-white hover:bg-gray-50"
                       >
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="text-sm font-medium text-gray-400">Q{idx + 1}</span>
+                              <span className="text-sm font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                                Q{qIdx + 1}
+                              </span>
                               <Badge variant="default">
                                 {QUESTION_TYPE_LABELS[question.question_type] || question.question_type}
                               </Badge>
@@ -828,16 +859,16 @@ const QuestionnairesPage: React.FC = () => {
                               <p className="text-sm text-gray-400 mt-1 italic">{question.help_text}</p>
                             )}
                           </div>
-                          <div className="flex gap-2 ml-4">
+                          <div className="flex gap-2">
                             <button
                               onClick={() => openQuestionModal(section, question)}
-                              className="text-gray-600 hover:text-gray-800"
+                              className="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDeleteQuestion(question)}
-                              className="text-red-600 hover:text-red-800"
+                              onClick={() => setDeleteConfirm({ type: 'question', item: question })}
+                              className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -850,10 +881,10 @@ const QuestionnairesPage: React.FC = () => {
               )}
             </Card>
           ))}
-          
+
           {(!selectedTemplate.sections || selectedTemplate.sections.length === 0) && (
-            <Card className="p-8 text-center">
-              <ClipboardList className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <Card className="p-12 text-center">
+              <Layers className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 mb-4">No sections yet. Add sections to build your questionnaire.</p>
               <Button onClick={() => openSectionModal()}>
                 <Plus className="w-4 h-4" /> Add First Section
@@ -866,47 +897,43 @@ const QuestionnairesPage: React.FC = () => {
   };
 
   // ============== RENDER: MODALS ==============
-  const renderCreateTemplateModal = () => (
+  const renderTemplateModal = () => (
     <Modal
-      isOpen={showCreateModal}
-      onClose={() => { setShowCreateModal(false); resetTemplateForm(); }}
-      title={isEditMode ? "Edit Template" : "Create New Template"}
+      isOpen={showTemplateModal}
+      onClose={() => { setShowTemplateModal(false); resetTemplateForm(); setError(null); }}
+      title={isEditMode ? 'Edit Template' : 'Create New Template'}
+      size="lg"
     >
       <form onSubmit={handleTemplateSubmit} className="space-y-4">
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>
-        )}
-
         <Input
           label="Template Name *"
-          name="name"
           value={templateForm.name}
           onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
           placeholder="e.g., Agriculture Impact Assessment"
           required
         />
 
-        <Textarea
-          label="Description *"
-          name="description"
-          value={templateForm.description}
-          onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
-          placeholder="Brief description of the questionnaire purpose"
-          required
-          rows={3}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+          <textarea
+            value={templateForm.description}
+            onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
+            placeholder="Brief description of the questionnaire purpose"
+            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+            rows={3}
+            required
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Select
             label="Sector *"
-            name="sector"
             value={templateForm.sector}
             onChange={(e) => setTemplateForm({ ...templateForm, sector: e.target.value as QuestionnaireSector })}
             options={sectorOptions}
           />
           <Select
             label="Template Type *"
-            name="template_type"
             value={templateForm.template_type}
             onChange={(e) => setTemplateForm({ ...templateForm, template_type: e.target.value as TemplateType })}
             options={templateTypeOptions}
@@ -916,27 +943,25 @@ const QuestionnairesPage: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Version"
-            name="version"
             value={templateForm.version}
             onChange={(e) => setTemplateForm({ ...templateForm, version: e.target.value })}
             placeholder="1.0"
           />
           <Input
             label="Est. Duration (minutes)"
-            name="estimated_duration_minutes"
             type="number"
             value={templateForm.estimated_duration_minutes}
             onChange={(e) => setTemplateForm({ ...templateForm, estimated_duration_minutes: parseInt(e.target.value) || 30 })}
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 pt-2">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={templateForm.ai_interview_enabled}
               onChange={(e) => setTemplateForm({ ...templateForm, ai_interview_enabled: e.target.checked })}
-              className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+              className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
             />
             <span className="text-sm text-gray-700">Enable AI Interview for this template</span>
           </label>
@@ -945,7 +970,7 @@ const QuestionnairesPage: React.FC = () => {
               type="checkbox"
               checked={templateForm.is_default}
               onChange={(e) => setTemplateForm({ ...templateForm, is_default: e.target.checked })}
-              className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+              className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
             />
             <span className="text-sm text-gray-700">Set as default template for this sector</span>
           </label>
@@ -954,7 +979,7 @@ const QuestionnairesPage: React.FC = () => {
               type="checkbox"
               checked={templateForm.is_active}
               onChange={(e) => setTemplateForm({ ...templateForm, is_active: e.target.checked })}
-              className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+              className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
             />
             <span className="text-sm text-gray-700">Active (available for use)</span>
           </label>
@@ -964,13 +989,13 @@ const QuestionnairesPage: React.FC = () => {
           <Button
             variant="secondary"
             type="button"
-            onClick={() => { setShowCreateModal(false); resetTemplateForm(); }}
+            onClick={() => { setShowTemplateModal(false); resetTemplateForm(); }}
             disabled={submitting}
           >
             Cancel
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Saving...' : (isEditMode ? 'Update Template' : 'Create Template')}
+            {submitting ? 'Saving...' : isEditMode ? 'Update Template' : 'Create Template'}
           </Button>
         </div>
       </form>
@@ -992,13 +1017,16 @@ const QuestionnairesPage: React.FC = () => {
           required
         />
 
-        <Textarea
-          label="Description"
-          value={sectionForm.description}
-          onChange={(e) => setSectionForm({ ...sectionForm, description: e.target.value })}
-          placeholder="Brief description of this section"
-          rows={2}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <textarea
+            value={sectionForm.description}
+            onChange={(e) => setSectionForm({ ...sectionForm, description: e.target.value })}
+            placeholder="Brief description of this section"
+            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+            rows={2}
+          />
+        </div>
 
         <Select
           label="Section Type"
@@ -1007,30 +1035,33 @@ const QuestionnairesPage: React.FC = () => {
           options={sectionTypeOptions}
         />
 
-        <Textarea
-          label="AI Section Introduction"
-          value={sectionForm.ai_section_intro}
-          onChange={(e) => setSectionForm({ ...sectionForm, ai_section_intro: e.target.value })}
-          placeholder="How the AI interviewer should introduce this section"
-          rows={2}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">AI Section Introduction</label>
+          <textarea
+            value={sectionForm.ai_section_intro}
+            onChange={(e) => setSectionForm({ ...sectionForm, ai_section_intro: e.target.value })}
+            placeholder="How the AI interviewer should introduce this section..."
+            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+            rows={2}
+          />
+        </div>
 
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={sectionForm.is_conditional}
             onChange={(e) => setSectionForm({ ...sectionForm, is_conditional: e.target.checked })}
-            className="w-4 h-4 text-emerald-600 border-gray-300 rounded"
+            className="w-4 h-4 text-emerald-600 rounded"
           />
-          <span className="text-sm text-gray-700">Conditional section</span>
+          <span className="text-sm text-gray-700">Conditional section (shown based on conditions)</span>
         </label>
 
         <div className="flex gap-3 pt-4 border-t">
           <Button variant="secondary" onClick={() => setShowSectionModal(false)} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSaveSection} disabled={!sectionForm.title || submitting}>
-            {submitting ? 'Saving...' : (editingSection ? 'Save Changes' : 'Add Section')}
+          <Button onClick={handleSaveSection} disabled={!sectionForm.title.trim() || submitting}>
+            {submitting ? 'Saving...' : editingSection ? 'Save Changes' : 'Add Section'}
           </Button>
         </div>
       </div>
@@ -1045,16 +1076,20 @@ const QuestionnairesPage: React.FC = () => {
         isOpen={showQuestionModal}
         onClose={() => setShowQuestionModal(false)}
         title={editingQuestion ? 'Edit Question' : 'Add Question'}
+        size="lg"
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-          <Textarea
-            label="Question Text *"
-            value={questionForm.text}
-            onChange={(e) => setQuestionForm({ ...questionForm, text: e.target.value })}
-            placeholder="Enter your question"
-            rows={2}
-            required
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Question Text *</label>
+            <textarea
+              value={questionForm.text}
+              onChange={(e) => setQuestionForm({ ...questionForm, text: e.target.value })}
+              placeholder="Enter your question"
+              className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+              rows={2}
+              required
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Select
@@ -1072,13 +1107,16 @@ const QuestionnairesPage: React.FC = () => {
           </div>
 
           {needsOptions && (
-            <Textarea
-              label="Options (one per line) *"
-              value={optionsText}
-              onChange={(e) => setOptionsText(e.target.value)}
-              placeholder="Option 1&#10;Option 2&#10;Option 3"
-              rows={4}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Options (one per line) *</label>
+              <textarea
+                value={optionsText}
+                onChange={(e) => setOptionsText(e.target.value)}
+                placeholder="Option 1&#10;Option 2&#10;Option 3"
+                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+                rows={4}
+              />
+            </div>
           )}
 
           <Input
@@ -1101,20 +1139,23 @@ const QuestionnairesPage: React.FC = () => {
                   type="checkbox"
                   checked={questionForm.is_required}
                   onChange={(e) => setQuestionForm({ ...questionForm, is_required: e.target.checked })}
-                  className="w-4 h-4 text-emerald-600 border-gray-300 rounded"
+                  className="w-4 h-4 text-emerald-600 rounded"
                 />
                 <span className="text-sm text-gray-700">Required</span>
               </label>
             </div>
           </div>
 
-          <Textarea
-            label="AI Probing Hints"
-            value={questionForm.ai_probing_hints}
-            onChange={(e) => setQuestionForm({ ...questionForm, ai_probing_hints: e.target.value })}
-            placeholder="Hints for AI on how to probe deeper"
-            rows={2}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">AI Probing Hints</label>
+            <textarea
+              value={questionForm.ai_probing_hints}
+              onChange={(e) => setQuestionForm({ ...questionForm, ai_probing_hints: e.target.value })}
+              placeholder="Hints for AI on how to probe deeper or follow up..."
+              className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+              rows={2}
+            />
+          </div>
 
           <div className="flex gap-3 pt-4 border-t sticky bottom-0 bg-white">
             <Button variant="secondary" onClick={() => setShowQuestionModal(false)} disabled={submitting}>
@@ -1122,9 +1163,9 @@ const QuestionnairesPage: React.FC = () => {
             </Button>
             <Button
               onClick={handleSaveQuestion}
-              disabled={!questionForm.text || (needsOptions && !optionsText.trim()) || submitting}
+              disabled={!questionForm.text.trim() || (needsOptions && !optionsText.trim()) || submitting}
             >
-              {submitting ? 'Saving...' : (editingQuestion ? 'Save Changes' : 'Add Question')}
+              {submitting ? 'Saving...' : editingQuestion ? 'Save Changes' : 'Add Question'}
             </Button>
           </div>
         </div>
@@ -1132,19 +1173,88 @@ const QuestionnairesPage: React.FC = () => {
     );
   };
 
+  const renderDeleteModal = () => (
+    <Modal
+      isOpen={!!deleteConfirm}
+      onClose={() => setDeleteConfirm(null)}
+      title={`Delete ${deleteConfirm?.type === 'template' ? 'Template' : deleteConfirm?.type === 'section' ? 'Section' : 'Question'}`}
+    >
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
+          <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-red-800">This action cannot be undone</p>
+            <p className="text-sm text-red-600 mt-1">
+              {deleteConfirm?.type === 'template' && 'All sections and questions in this template will be deleted.'}
+              {deleteConfirm?.type === 'section' && 'All questions in this section will be deleted.'}
+              {deleteConfirm?.type === 'question' && 'This question will be permanently removed.'}
+            </p>
+          </div>
+        </div>
+
+        <p className="text-gray-600">
+          Are you sure you want to delete{' '}
+          <strong>
+            "{deleteConfirm?.type === 'template'
+              ? (deleteConfirm.item as QuestionnaireTemplate).name
+              : deleteConfirm?.type === 'section'
+              ? (deleteConfirm.item as QuestionnaireSection).title
+              : (deleteConfirm?.item as Question)?.text?.substring(0, 50) + '...'}"
+          </strong>
+          ?
+        </p>
+
+        <div className="flex gap-3 pt-4 border-t">
+          <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              if (deleteConfirm?.type === 'template') handleDeleteTemplate();
+              else if (deleteConfirm?.type === 'section') handleDeleteSection();
+              else if (deleteConfirm?.type === 'question') handleDeleteQuestion();
+            }}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Delete
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+
   // ============== MAIN RENDER ==============
   return (
     <div className="space-y-6">
+      {/* Alerts */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 text-xl">×</button>
+        </div>
+      )}
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{success}</span>
+          <button onClick={() => setSuccess(null)} className="text-green-500 hover:text-green-700 text-xl">×</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Questionnaires</h1>
-          <p className="text-gray-500 mt-1">Manage survey templates and questions</p>
+          <p className="text-gray-500 mt-1">Manage survey templates, sections, and questions</p>
         </div>
         {viewMode === 'list' && (
-          <Button onClick={() => { resetTemplateForm(); setShowCreateModal(true); }}>
-            <Plus className="w-4 h-4" /> New Template
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/questionnaires/questions')}>
+              <BookOpen className="w-4 h-4" /> Question Bank
+            </Button>
+            <Button onClick={() => { resetTemplateForm(); setShowTemplateModal(true); }}>
+              <Plus className="w-4 h-4" /> New Template
+            </Button>
+          </div>
         )}
       </div>
 
@@ -1152,9 +1262,10 @@ const QuestionnairesPage: React.FC = () => {
       {viewMode === 'list' ? renderListView() : renderDetailView()}
 
       {/* Modals */}
-      {renderCreateTemplateModal()}
+      {renderTemplateModal()}
       {renderSectionModal()}
       {renderQuestionModal()}
+      {renderDeleteModal()}
     </div>
   );
 };

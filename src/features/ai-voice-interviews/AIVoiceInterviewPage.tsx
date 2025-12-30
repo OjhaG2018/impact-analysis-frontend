@@ -10,7 +10,7 @@ import {
   CheckCircle, AlertCircle, Clock, MessageCircle,
   Phone, Globe, ChevronRight, Loader2, RefreshCw,
   Video, VideoOff, SkipForward, Settings, X,
-  Headphones, Camera, AudioLines, PhoneOff, LogOut
+  Headphones, Camera, AudioLines, PhoneOff, LogOut, ArrowLeft
 } from 'lucide-react';
 
 // ============= Type Definitions =============
@@ -2050,6 +2050,13 @@ const AIVoiceInterviewPage: React.FC = () => {
       <div className="bg-white border-b px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
+            <button 
+              onClick={() => navigate('/')}
+              className="p-2 hover:bg-gray-100 rounded-lg mr-2"
+              title="Go Back"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-500" />
+            </button>
             <MessageCircle className="w-5 h-5 text-blue-500 mr-2" />
             <span className="font-semibold truncate max-w-[100px] text-sm">{session?.project_name}</span>
           </div>

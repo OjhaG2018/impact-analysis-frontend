@@ -1,4 +1,6 @@
+// src/features/interviews/InterviewsPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Search, Filter, LayoutGrid, List, Calendar, 
   ChevronDown, MoreVertical, Clock, MapPin, User, FileText,
@@ -99,6 +101,8 @@ const STATUS_CONFIG: Record<InterviewStatus, { variant: 'default' | 'success' | 
 
 // ============== MAIN COMPONENT ==============
 const InterviewsPage: React.FC = () => {
+  const navigate = useNavigate();
+  
   // State
   const [interviews, setInterviews] = useState<InterviewResponse[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -116,11 +120,10 @@ const InterviewsPage: React.FC = () => {
   });
 
   // Modal states
-  const [selectedInterview, setSelectedInterview] = useState<InterviewResponse | null>(null);
-  const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
   const [showNewInterviewModal, setShowNewInterviewModal] = useState(false);
   const [showConductModal, setShowConductModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedInterview, setSelectedInterview] = useState<InterviewResponse | null>(null);
   const [draggedInterview, setDraggedInterview] = useState<InterviewResponse | null>(null);
 
   // Load data
@@ -214,8 +217,7 @@ const InterviewsPage: React.FC = () => {
   };
 
   const handleViewDetails = (interview: InterviewResponse) => {
-    setSelectedInterview(interview);
-    setShowDetailsDrawer(true);
+    navigate(`/interviews/${interview.id}`);
   };
 
   const handleConductInterview = (interview: InterviewResponse) => {
@@ -285,12 +287,10 @@ const InterviewsPage: React.FC = () => {
   // Handle stat card click - filter by status
   const handleStatCardClick = (status: string | null) => {
     if (status === null) {
-      // Clear filter - show all
       setFilters(prev => ({ ...prev, status: '' }));
     } else {
       setFilters(prev => ({ ...prev, status }));
     }
-    // Switch to list view for filtered results (optional - can be removed if you prefer kanban)
     if (status) {
       setViewMode('list');
     }
@@ -864,24 +864,6 @@ const InterviewsPage: React.FC = () => {
       {viewMode === 'calendar' && renderCalendarView()}
 
       {/* Modals */}
-      {selectedInterview && showDetailsDrawer && (
-        <InterviewDetailsDrawer
-          interview={selectedInterview}
-          onClose={() => {
-            setShowDetailsDrawer(false);
-            setSelectedInterview(null);
-          }}
-          onConduct={() => {
-            setShowDetailsDrawer(false);
-            setShowConductModal(true);
-          }}
-          onReview={() => {
-            setShowDetailsDrawer(false);
-            setShowReviewModal(true);
-          }}
-        />
-      )}
-
       {showNewInterviewModal && (
         <NewInterviewModal
           projects={projects}
@@ -983,234 +965,6 @@ const InterviewCardMenu: React.FC<{
           </div>
         </>
       )}
-    </div>
-  );
-};
-
-// Interview Details Drawer
-const InterviewDetailsDrawer: React.FC<{
-  interview: InterviewResponse;
-  onClose: () => void;
-  onConduct: () => void;
-  onReview: () => void;
-}> = ({ interview, onClose, onConduct, onReview }) => {
-  const [answers, setAnswers] = useState<QuestionAnswer[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadAnswers();
-  }, [interview.id]);
-
-  const loadAnswers = async () => {
-    try {
-      const data = await api.get<InterviewResponse>(`${endpoints.interviews}${interview.id}/`);
-      setAnswers(data.answers || []);
-    } catch (error) {
-      console.error('Error loading answers:', error);
-    }
-    setLoading(false);
-  };
-
-  // Group answers by section
-  const answersBySection = answers.reduce((acc, answer) => {
-    const section = answer.section_title || 'General';
-    if (!acc[section]) acc[section] = [];
-    acc[section].push(answer);
-    return acc;
-  }, {} as Record<string, QuestionAnswer[]>);
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute right-0 top-0 bottom-0 w-full max-w-2xl bg-white shadow-xl overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Interview Details</h2>
-              <p className="text-sm text-gray-500">{interview.project_code}</p>
-            </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-          {/* Status Badge */}
-          <div className="flex items-center gap-3">
-            <Badge variant={STATUS_CONFIG[interview.status].variant}>
-              {STATUS_CONFIG[interview.status].label}
-            </Badge>
-            {interview.impact_score && (
-              <div className="flex items-center gap-1 px-3 py-1 bg-amber-50 rounded-full">
-                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span className="text-sm font-semibold text-amber-700">{interview.impact_score}/5</span>
-              </div>
-            )}
-          </div>
-
-          {/* Beneficiary Info */}
-          <Card className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <User className="w-4 h-4" /> Beneficiary Information
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-500">Name</p>
-                <p className="font-medium">{interview.beneficiary_name}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">ID</p>
-                <p className="font-medium">{interview.beneficiary_id}</p>
-              </div>
-              {interview.beneficiary_details?.phone && (
-                <div>
-                  <p className="text-gray-500">Phone</p>
-                  <p className="font-medium">{interview.beneficiary_details.phone}</p>
-                </div>
-              )}
-              {interview.beneficiary_details?.village && (
-                <div>
-                  <p className="text-gray-500">Location</p>
-                  <p className="font-medium">
-                    {interview.beneficiary_details.village}, {interview.beneficiary_details.district}
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Interview Info */}
-          <Card className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <ClipboardList className="w-4 h-4" /> Interview Details
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-500">Date</p>
-                <p className="font-medium">{new Date(interview.interview_date).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Interviewer</p>
-                <p className="font-medium">{interview.interviewer_name || '-'}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Location</p>
-                <p className="font-medium">{interview.interview_location || '-'}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Duration</p>
-                <p className="font-medium">{interview.duration_minutes ? `${interview.duration_minutes} mins` : '-'}</p>
-              </div>
-              {interview.gps_latitude && interview.gps_longitude && (
-                <div className="col-span-2">
-                  <p className="text-gray-500">GPS Coordinates</p>
-                  <p className="font-medium">
-                    {interview.gps_latitude.toFixed(6)}, {interview.gps_longitude.toFixed(6)}
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Notes */}
-          {(interview.interviewer_notes || interview.observations) && (
-            <Card className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" /> Notes & Observations
-              </h3>
-              {interview.interviewer_notes && (
-                <div className="mb-3">
-                  <p className="text-sm text-gray-500 mb-1">Interviewer Notes</p>
-                  <p className="text-sm">{interview.interviewer_notes}</p>
-                </div>
-              )}
-              {interview.observations && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Observations</p>
-                  <p className="text-sm">{interview.observations}</p>
-                </div>
-              )}
-            </Card>
-          )}
-
-          {/* Review Info */}
-          {interview.reviewed_by && (
-            <Card className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" /> Review Information
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-500">Reviewed By</p>
-                  <p className="font-medium">{interview.reviewed_by_name}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Reviewed At</p>
-                  <p className="font-medium">
-                    {interview.reviewed_at ? new Date(interview.reviewed_at).toLocaleString() : '-'}
-                  </p>
-                </div>
-                {interview.review_comments && (
-                  <div className="col-span-2">
-                    <p className="text-gray-500">Comments</p>
-                    <p className="font-medium">{interview.review_comments}</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* Answers */}
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-            </div>
-          ) : answers.length > 0 ? (
-            <Card className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="w-4 h-4" /> Responses ({answers.length})
-              </h3>
-              <div className="space-y-4">
-                {Object.entries(answersBySection).map(([section, sectionAnswers]) => (
-                  <div key={section}>
-                    <h4 className="text-sm font-medium text-emerald-600 mb-2">{section}</h4>
-                    <div className="space-y-3">
-                      {sectionAnswers.map(answer => (
-                        <div key={answer.id} className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-sm text-gray-600 mb-1">{answer.question_text}</p>
-                          <p className="font-medium text-gray-900">
-                            {answer.display_value || answer.text_value || 
-                              (answer.selected_options?.length > 0 ? answer.selected_options.join(', ') : '-')}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          ) : null}
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
-            {['draft', 'in_progress'].includes(interview.status) && (
-              <Button onClick={onConduct} className="flex-1">
-                <Edit className="w-4 h-4" /> Continue Interview
-              </Button>
-            )}
-            {interview.status === 'submitted' && (
-              <Button onClick={onReview} className="flex-1">
-                <CheckCircle className="w-4 h-4" /> Review Interview
-              </Button>
-            )}
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
@@ -1461,17 +1215,13 @@ const ConductInterviewModal: React.FC<{
 
   const loadQuestionnaire = async () => {
     try {
-      // Get full interview details with questionnaire
       const interviewData = await api.get<InterviewResponse>(`${endpoints.interviews}${interview.id}/`);
-      
-      // Get questionnaire template with sections
       const templateData = await api.get<QuestionnaireTemplate>(
         `${endpoints.templates}${interviewData.questionnaire}/`
       );
       
       setSections(templateData.sections || []);
       
-      // Load existing answers
       const existingAnswers = interviewData.answers || [];
       const answersMap: Record<number, any> = {};
       existingAnswers.forEach(ans => {
@@ -1509,19 +1259,16 @@ const ConductInterviewModal: React.FC<{
     setError('');
 
     try {
-      // Format answers for API
       const answersArray = Object.entries(answers).map(([questionId, answer]) => ({
         question: parseInt(questionId),
         ...answer,
       }));
 
-      // Save answers
       await api.post(`${endpoints.interviews}${interview.id}/save_answers/`, {
         answers: answersArray,
       });
 
       if (submit) {
-        // Submit for review
         await api.post(`${endpoints.interviews}${interview.id}/submit/`, {});
       }
 
@@ -1726,7 +1473,6 @@ const ConductInterviewModal: React.FC<{
   return (
     <Modal isOpen={true} onClose={onClose} title={`Conduct Interview - ${interview.beneficiary_name}`} size="xl">
       <div className="space-y-6">
-        {/* Header Info */}
         <Card className="p-4 bg-gray-50">
           <div className="flex items-center justify-between">
             <div>
@@ -1749,7 +1495,6 @@ const ConductInterviewModal: React.FC<{
           </div>
         )}
 
-        {/* Section Navigation */}
         <div className="flex gap-2 overflow-x-auto pb-2">
           {sections.map((section, idx) => (
             <button
@@ -1768,7 +1513,6 @@ const ConductInterviewModal: React.FC<{
           ))}
         </div>
 
-        {/* Questions */}
         {currentSectionData && (
           <div className="space-y-6">
             <div className="border-b pb-2">
@@ -1802,7 +1546,6 @@ const ConductInterviewModal: React.FC<{
           </div>
         )}
 
-        {/* Navigation */}
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="flex gap-2">
             <Button
@@ -1867,7 +1610,6 @@ const ReviewInterviewModal: React.FC<{
   return (
     <Modal isOpen={true} onClose={onClose} title="Review Interview" size="md">
       <div className="space-y-6">
-        {/* Interview Summary */}
         <Card className="p-4 bg-gray-50">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -1909,7 +1651,6 @@ const ReviewInterviewModal: React.FC<{
           </div>
         )}
 
-        {/* Review Comments */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Review Comments
@@ -1923,11 +1664,10 @@ const ReviewInterviewModal: React.FC<{
           />
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3 pt-4 border-t">
           <Button 
-            variant="danger" 
-            className="flex-1"
+            variant="outline" 
+            className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
             onClick={() => handleReview('reject')}
             disabled={loading}
           >

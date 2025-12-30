@@ -1,4 +1,5 @@
 import React, { useState, FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { BarChart3, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card, Button, Input } from '../../components/ui';
@@ -91,6 +92,17 @@ const LoginPage: React.FC = () => {
                 {error}
               </div>
             )}
+            
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <Link 
+                to="/forgot-password" 
+                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+            
             <Button type="submit" className="w-full justify-center" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
@@ -113,11 +125,7 @@ const LoginPage: React.FC = () => {
           </form>
         )}
 
-        {isLogin && (
-          <div className="mt-6 pt-6 border-t text-center">
-            <p className="text-sm text-gray-500">Demo credentials: admin / admin123</p>
-          </div>
-        )}
+
       </Card>
     </div>
   );

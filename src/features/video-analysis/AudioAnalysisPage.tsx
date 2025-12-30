@@ -2,6 +2,9 @@
  * AudioAnalysisPage.tsx
  * Page for uploading and analyzing audio files
  * Place in: frontend/src/features/video-analysis/AudioAnalysisPage.tsx
+ * 
+ * UPDATED: Shows Conversation Summary (GPT-4 generated) prominently
+ *          Full Transcript is now collapsible
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +12,8 @@ import {
   Upload, RefreshCw, Trash2, Eye, Mic, Play, Pause, Clock,
   CheckCircle, XCircle, AlertTriangle, Zap, FileAudio, Volume2,
   Heart, TrendingUp, TrendingDown, Minus, MessageSquare, Brain,
-  Target, Shield, Languages, FileText, ThumbsUp, Meh, Frown, Smile
+  Target, Shield, Languages, FileText, ThumbsUp, Meh, Frown, Smile,
+  ChevronDown, ChevronRight, Sparkles
 } from 'lucide-react';
 import { Card, Button, Badge, LoadingSpinner, Modal, Select } from '../../components/ui';
 import api, { audioAnalysisApi, AudioFile, AudioAnalysis } from '../../api';
@@ -180,6 +184,9 @@ const AudioAnalysisPage: React.FC = () => {
   // Audio playback
   const [isPlaying, setIsPlaying] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Transcript expanded state
+  const [showTranscript, setShowTranscript] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -405,6 +412,7 @@ const AudioAnalysisPage: React.FC = () => {
   const viewAnalysisDetails = (audio: AudioFile) => {
     if (audio.analyses && audio.analyses.length > 0) {
       setSelectedAnalysis(audio.analyses[0] as any);
+      setShowTranscript(false); // Reset transcript visibility
       setShowAnalysisModal(true);
     }
   };
@@ -435,8 +443,8 @@ const AudioAnalysisPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Audio Analysis</h1>
             <p className="text-gray-600 mt-1">
               Upload and analyze audio recordings
-              <span className="ml-2 text-green-600 text-sm font-medium">
-                🆓 FREE Local Analysis (Whisper)
+              <span className="ml-2 text-purple-600 text-sm font-medium">
+                ✨ OpenAI Whisper + GPT-4 Summary
               </span>
             </p>
           </div>
@@ -565,7 +573,7 @@ const AudioAnalysisPage: React.FC = () => {
           <div className="text-6xl mb-4">🎙️</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Audio Files Found</h3>
           <p className="text-gray-500 mb-4">
-            Upload audio recordings for transcription and sentiment analysis.
+            Upload audio recordings for transcription and AI-powered summary.
           </p>
           <Button onClick={() => setShowUploadModal(true)}>
             <Upload className="w-4 h-4 mr-2" />
@@ -658,8 +666,18 @@ const AudioAnalysisPage: React.FC = () => {
                         />
                       </div>
                       
-                      {/* Transcript Preview */}
-                      {analysis.transcript && (
+                      {/* ===== CONVERSATION SUMMARY PREVIEW ===== */}
+                      {analysis.conversation_summary ? (
+                        <div className="mt-2 bg-gradient-to-r from-purple-50 to-indigo-50 p-2 rounded border border-purple-200">
+                          <p className="text-xs font-medium text-purple-700 mb-1 flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            AI Summary
+                          </p>
+                          <p className="text-xs text-gray-700 line-clamp-2">
+                            {analysis.conversation_summary}
+                          </p>
+                        </div>
+                      ) : analysis.transcript && (
                         <p className="text-xs text-gray-600 line-clamp-2 mt-2 bg-gray-50 p-2 rounded">
                           "{analysis.transcript.substring(0, 100)}..."
                         </p>
@@ -742,7 +760,7 @@ const AudioAnalysisPage: React.FC = () => {
               className="rounded border-gray-300 text-purple-600 mr-2 h-4 w-4"
             />
             <label htmlFor="autoAnalyze" className="text-sm font-medium text-gray-700">
-              Auto-analyze after upload (FREE)
+              Auto-analyze after upload (OpenAI Whisper + GPT-4 Summary)
             </label>
           </div>
           
@@ -827,7 +845,7 @@ const AudioAnalysisPage: React.FC = () => {
         </div>
       </Modal>
 
-      {/* Analysis Detail Modal */}
+      {/* ===== ANALYSIS DETAIL MODAL ===== */}
       {showAnalysisModal && selectedAnalysis && (
         <Modal
           isOpen={true}
@@ -869,6 +887,25 @@ const AudioAnalysisPage: React.FC = () => {
               )}
             </Card>
 
+            {/* ========== CONVERSATION SUMMARY - PRIMARY ========== */}
+            {selectedAnalysis.conversation_summary && (
+              <div className="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl p-5 border-2 border-purple-300 shadow-sm">
+                <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2 text-lg">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                  📋 Conversation Summary
+                  <span className="text-xs font-normal bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full ml-2">
+                    {selectedAnalysis.transcript_language_name || 'Auto-detected'}
+                  </span>
+                  <span className="text-xs font-normal bg-green-200 text-green-700 px-2 py-0.5 rounded-full">
+                    GPT-4 Generated
+                  </span>
+                </h4>
+                <p className="text-gray-800 whitespace-pre-wrap leading-relaxed text-base">
+                  {selectedAnalysis.conversation_summary}
+                </p>
+              </div>
+            )}
+
             {/* Scores */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <AnalysisSection
@@ -877,9 +914,7 @@ const AudioAnalysisPage: React.FC = () => {
                 bgColor="bg-blue-50"
               >
                 <ScoreBar label="Polarity" score={Math.abs(selectedAnalysis.polarity_score)} color="bg-blue-500" />
-                
                 <ScoreBar label="Confidence" score={selectedAnalysis.polarity_confidence} color="bg-indigo-500" />
-
                 <DataRow label="Label" value={selectedAnalysis.polarity_label} />
               </AnalysisSection>
 
@@ -915,16 +950,36 @@ const AudioAnalysisPage: React.FC = () => {
               </AnalysisSection>
             </div>
 
-            {/* Transcript */}
+            {/* ========== FULL TRANSCRIPT - COLLAPSIBLE ========== */}
             {selectedAnalysis.transcript && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Full Transcript
-                </h4>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap max-h-60 overflow-y-auto">
-                  {selectedAnalysis.transcript}
-                </p>
+              <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                <button
+                  onClick={() => setShowTranscript(!showTranscript)}
+                  className="w-full px-4 py-3 flex items-center justify-between bg-gray-100 hover:bg-gray-200 transition"
+                >
+                  <span className="font-semibold text-gray-700 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    Full Transcript
+                    <span className="text-xs text-gray-500 font-normal">
+                      ({selectedAnalysis.transcript_word_count || 0} words)
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-2 text-sm text-gray-500">
+                    {showTranscript ? 'Click to collapse' : 'Click to expand'}
+                    {showTranscript ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                  </span>
+                </button>
+                {showTranscript && (
+                  <div className="p-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                      {selectedAnalysis.transcript}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -978,8 +1033,8 @@ const AudioAnalysisPage: React.FC = () => {
               {selectedAnalysis.processing_time_seconds && (
                 <span>Processing: {selectedAnalysis.processing_time_seconds.toFixed(2)}s</span>
               )}
-              <span>Model: {selectedAnalysis.model_used || 'local_whisper'}</span>
-              <span className="text-green-600 font-medium">Cost: FREE</span>
+              <span>Model: {selectedAnalysis.model_used || 'openai_whisper'}</span>
+              <span className="text-purple-600 font-medium">OpenAI Whisper + GPT-4</span>
             </div>
           </div>
         </Modal>
