@@ -231,7 +231,7 @@ const AnimatedWaveform: React.FC<{ isActive: boolean; level: number }> = ({ isAc
 
 // ============= Video Preview Component with Recording Time =============
 const VideoPreview: React.FC<{ 
-  videoRef: React.RefObject<HTMLVideoElement>; 
+  videoRef: React.RefObject<HTMLVideoElement | null>; 
   isRecording: boolean;
   isVisible: boolean;
   recordingTime: number;
@@ -605,7 +605,7 @@ const AIVoiceInterviewPage: React.FC = () => {
   const turnTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
-  const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const videoPreviewRef = useRef<HTMLVideoElement>(null!);
   
   // VAD refs
   const audioContextRef = useRef<AudioContext | null>(null);
