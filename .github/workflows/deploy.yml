@@ -1,62 +1,659 @@
-name: Deploy Impact Analysis to Production
+name: Deploy Impact Analysis Frontend
 
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '.github/workflows/**'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+
+env:
+  PROJECT_NAME: "Impact Analysis Frontend"
+  DOMAIN: "impact.rtcknowledge.com"
+  FRAMEWORK: "react"
 
 jobs:
   deploy:
+    name: Deploy to Production
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build project
-        run: npm run build
-        env:
-          CI: false
-      
-      - name: Create deployment package
-        run: |
-          mkdir -p deploy_package
-          cp -r build deploy_package/
-          tar -czf deploy.tar.gz -C deploy_package .
-      
-      - name: Deploy to server
-        uses: easingthemes/ssh-deploy@main
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          SOURCE: "deploy.tar.gz"
-          TARGET: "/tmp/impactanalysis_deploy.tar.gz"
-      
-      - name: Extract and setup files
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            echo "🚀 Starting deployment..."
-            
-            cd /home/impactanalysis.rtcknowledge.com/public_html
-            tar -xzf /tmp/impactanalysis_deploy.tar.gz
-            rm /tmp/impactanalysis_deploy.tar.gz
-            
-            chown -R impac2613:impac2613 /home/impactanalysis.rtcknowledge.com/public_html
-            chmod -R 755 /home/impactanalysis.rtcknowledge.com/public_html
-            
-            echo "✅ Deployment completed at $(date)"
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+    
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@v1.0.0
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        envs: GH_TOKEN
+        command_timeout: 30m
+        script: |
+          #!/bin/bash
+          set -e
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # DEPLOYHUB - ZERO-DOWNTIME DEPLOYMENT
+          # ═══════════════════════════════════════════════════════════════════════════
+          # Project:   Impact Analysis Frontend
+          # Domain:    impact.rtcknowledge.com
+          # Framework: react
+          # Port:      8008
+          # ═══════════════════════════════════════════════════════════════════════════
+
+          echo "═══════════════════════════════════════════════════════════════════════════"
+          echo "🚀 DEPLOYHUB - Starting Deployment"
+          echo "═══════════════════════════════════════════════════════════════════════════"
+          echo "📅 Started at: $(date)"
+          echo "📦 Project: Impact Analysis Frontend"
+          echo "🌐 Domain: impact.rtcknowledge.com"
+          echo "🔧 Framework: react"
+          echo "═══════════════════════════════════════════════════════════════════════════"
+
+          # Configuration
+          DOMAIN="impact.rtcknowledge.com"
+          PROJECT_NAME="Impact Analysis Frontend"
+          PORT="8008"
+          BRANCH="main"
+          FRAMEWORK="react"
+
+          # Paths - Zero Downtime Structure
+          BASE_PATH="/home/impact.rtcknowledge.com"
+          RELEASES_PATH="$BASE_PATH/releases"
+          SHARED_PATH="$BASE_PATH/shared"
+          PUBLIC_HTML="$BASE_PATH/public_html"
+          TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+          RELEASE_PATH="$RELEASES_PATH/$TIMESTAMP"
+
+          # Service names
+          SERVICE_NAME="impact-rtcknowledge-com"
+          PROXY_NAME="impact_rtcknowledge_com_proxy"
+
+          # Panel config
+          VHOST_CONF="/usr/local/lsws/conf/vhosts/impact.rtcknowledge.com/vhost.conf"
+
+          # State tracking
+          PREVIOUS_RELEASE=""
+          DEPLOY_SUCCESS=false
+
+          # Cleanup function for rollback
+          cleanup_on_failure() {
+              echo ""
+              echo "❌ DEPLOYMENT FAILED - INITIATING ROLLBACK"
+              echo "═══════════════════════════════════════════════════════════════════════════"
+
+              if [ -n "$PREVIOUS_RELEASE" ] && [ -d "$PREVIOUS_RELEASE" ]; then
+                  echo "🔄 Rolling back to previous release: $PREVIOUS_RELEASE"
+                  # Only remove if it's a symlink
+                  if [ -L "$PUBLIC_HTML" ]; then
+                      rm -f "$PUBLIC_HTML"
+                      ln -sfn "$PREVIOUS_RELEASE" "$PUBLIC_HTML"
+
+                      # Restart service with previous release
+                      systemctl restart "$SERVICE_NAME" 2>/dev/null || true
+
+                      echo "✅ Rollback completed"
+                  else
+                      echo "⚠️  Cannot rollback - public_html is not a symlink"
+                  fi
+              else
+                  echo "⚠️  No previous release available for rollback"
+              fi
+
+              # Clean up failed release
+              if [ -d "$RELEASE_PATH" ] && [ "$DEPLOY_SUCCESS" = false ]; then
+                  echo "🗑️  Cleaning up failed release: $RELEASE_PATH"
+                  rm -rf "$RELEASE_PATH"
+              fi
+
+              exit 1
+          }
+
+          # Trap errors for automatic rollback
+          trap cleanup_on_failure ERR
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 1: PREFLIGHT CHECKS
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "🔍 STAGE 1: Preflight Checks"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          # Check if domain directory exists
+          if [ ! -d "$BASE_PATH" ]; then
+              echo "❌ Base path does not exist: $BASE_PATH"
+              echo "   Please create the domain in CyberPanel first"
+              exit 1
+          fi
+
+          # Check if vhost config exists
+          if [ ! -f "$VHOST_CONF" ]; then
+              echo "⚠️  VHost config not found: $VHOST_CONF"
+              echo "   Domain may not be fully configured in CyberPanel"
+          fi
+
+          # Check required tools
+          for cmd in git python3 pip3; do
+              if ! command -v $cmd &> /dev/null; then
+                  echo "❌ Required command not found: $cmd"
+                  exit 1
+              fi
+          done
+
+          echo "✅ Preflight checks passed"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 2: DIRECTORY SETUP
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "📁 STAGE 2: Setting Up Directory Structure"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          # Create zero-downtime directory structure
+          mkdir -p "$RELEASES_PATH"
+          mkdir -p "$SHARED_PATH"/{logs,media,.cache}
+          mkdir -p "$RELEASE_PATH"
+
+          # Identify previous release for rollback
+          if [ -L "$PUBLIC_HTML" ]; then
+              PREVIOUS_RELEASE=$(readlink -f "$PUBLIC_HTML")
+              echo "📌 Previous release: $PREVIOUS_RELEASE"
+          else
+              echo "📌 First deployment detected"
+          fi
+
+          echo "📂 New release path: $RELEASE_PATH"
+          echo "✅ Directory structure ready"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 3: CODE DEPLOYMENT
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "📥 STAGE 3: Pulling Code from GitHub"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          cd "$RELEASE_PATH"
+
+          # Configure git
+          git config --global --add safe.directory "$RELEASE_PATH" 2>/dev/null || true
+
+          # Clone repository
+          echo "📦 Cloning repository..."
+          git clone --depth 1 --branch "$BRANCH" \
+              "https://x-access-token:$GH_TOKEN@github.com/OjhaG2018/impact-analysis-frontend.git" . \
+              2>&1 || {
+                  echo "❌ Failed to clone repository"
+                  echo "   Check if GitHub App has access to: OjhaG2018/impact-analysis-frontend"
+                  exit 1
+              }
+
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          COMMIT_MSG=$(git log -1 --format='%s' | head -c 50)
+
+          echo "✅ Code deployed"
+          echo "   Commit: $COMMIT_HASH - $COMMIT_MSG"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 4: SHARED RESOURCES SETUP
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "🔗 STAGE 4: Linking Shared Resources"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          cd "$RELEASE_PATH"
+
+          # Link shared directories
+          if [ -d "$SHARED_PATH/media" ]; then
+              rm -rf media 2>/dev/null || true
+              ln -sfn "$SHARED_PATH/media" media
+              echo "   ✓ Linked media directory"
+          fi
+
+          # Link logs directory
+          ln -sfn "$SHARED_PATH/logs" logs 2>/dev/null || mkdir -p logs
+
+          echo "✅ Shared resources linked"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 5: ENVIRONMENT CONFIGURATION
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "⚙️  STAGE 5: Environment Configuration"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          cd "$RELEASE_PATH"
+
+          # Smart .env merging:
+          # 1. Use .env.example from repo as template (if exists)
+          # 2. Preserve existing values from shared/.env
+          # 3. Add/update DeployHub-provided variables (database, custom env vars)
+
+          ENV_FILE="$SHARED_PATH/.env"
+          ENV_EXAMPLE=".env.example"
+          TEMP_ENV=$(mktemp)
+
+          echo "   📋 Building environment configuration..."
+
+          # Step 1: Start with existing .env or .env.example as base
+          if [ -f "$ENV_FILE" ]; then
+              echo "   ✓ Found existing .env file"
+              cp "$ENV_FILE" "$TEMP_ENV"
+          else
+              echo "   ℹ️  No existing .env found"
+              touch "$TEMP_ENV"
+          fi
+
+          # Step 2: Add any NEW variables from .env.example (don't overwrite existing)
+          if [ -f "$ENV_EXAMPLE" ]; then
+              echo "   📄 Merging variables from .env.example..."
+              ADDED_COUNT=0
+              while IFS= read -r line || [ -n "$line" ]; do
+                  # Skip empty lines and comments
+                  if [[ -z "$line" ]] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+                      continue
+                  fi
+
+                  # Extract key from KEY=value or KEY=
+                  if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)= ]]; then
+                      KEY="${BASH_REMATCH[1]}"
+
+                      # Only add if key doesn't exist in current env
+                      if ! grep -q "^$KEY=" "$TEMP_ENV" 2>/dev/null; then
+                          echo "$line" >> "$TEMP_ENV"
+                          ADDED_COUNT=$((ADDED_COUNT + 1))
+                      fi
+                  fi
+              done < "$ENV_EXAMPLE"
+
+              if [ "$ADDED_COUNT" -gt 0 ]; then
+                  echo "   ✓ Added $ADDED_COUNT new variables from .env.example"
+              fi
+          fi
+
+          # Step 3: Add/update DeployHub-provided variables
+          DEPLOYHUB_VARS='ALLOWED_HOSTS=impact.rtcknowledge.com
+          CORS_ALLOWED_ORIGINS=https://impact.rtcknowledge.com
+          NODE_ENV=production'
+
+          if [ -n "$DEPLOYHUB_VARS" ]; then
+              echo "   🔧 Applying DeployHub configuration..."
+              while IFS= read -r line || [ -n "$line" ]; do
+                  if [[ -z "$line" ]]; then
+                      continue
+                  fi
+
+                  # Extract key
+                  if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)= ]]; then
+                      KEY="${BASH_REMATCH[1]}"
+
+                      # Remove existing line with this key (if any)
+                      if grep -q "^$KEY=" "$TEMP_ENV" 2>/dev/null; then
+                          sed -i "/^$KEY=/d" "$TEMP_ENV"
+                      fi
+
+                      # Add the new value
+                      echo "$line" >> "$TEMP_ENV"
+                  fi
+              done <<< "$DEPLOYHUB_VARS"
+              echo "   ✓ Applied DeployHub variables"
+          fi
+
+          # Step 4: Move temp file to shared location
+          mv "$TEMP_ENV" "$ENV_FILE"
+          chmod 600 "$ENV_FILE"
+
+          # Step 5: Link to release
+          ln -sfn "$ENV_FILE" .env
+
+          # Show summary
+          TOTAL_VARS=$(grep -c "^[A-Za-z_]" "$ENV_FILE" 2>/dev/null || echo 0)
+          echo "   📊 Total environment variables: $TOTAL_VARS"
+
+          # Check for critical variables
+          MISSING_CRITICAL=""
+          for var in SECRET_KEY DEBUG ALLOWED_HOSTS; do
+              if ! grep -q "^$var=" "$ENV_FILE" 2>/dev/null; then
+                  MISSING_CRITICAL="$MISSING_CRITICAL $var"
+              fi
+          done
+
+          if [ -n "$MISSING_CRITICAL" ]; then
+              echo "   ⚠️  Missing critical variables:$MISSING_CRITICAL"
+              echo "   ℹ️  Edit: $ENV_FILE"
+          fi
+
+          echo "✅ Environment configured"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 6: DEPENDENCIES
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "📦 STAGE 6: Installing Dependencies"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          cd "$RELEASE_PATH"
+
+          # Check if package-lock.json changed (for caching)
+          LOCK_HASH=""
+          if [ -f "package-lock.json" ]; then
+              LOCK_HASH=$(md5sum package-lock.json | cut -d' ' -f1)
+          elif [ -f "yarn.lock" ]; then
+              LOCK_HASH=$(md5sum yarn.lock | cut -d' ' -f1)
+          fi
+
+          CACHED_HASH=""
+          if [ -f "$SHARED_PATH/.cache/npm_hash" ]; then
+              CACHED_HASH=$(cat "$SHARED_PATH/.cache/npm_hash")
+          fi
+
+          # Check Node.js version
+          NODE_VERSION=$(node --version 2>/dev/null || echo "not installed")
+          echo "   Node.js version: $NODE_VERSION"
+
+          # Check if we can use cached node_modules
+          if [ -d "$SHARED_PATH/node_modules" ] && [ "$LOCK_HASH" = "$CACHED_HASH" ]; then
+              echo "   ♻️  Package lock unchanged - using cached node_modules"
+              ln -sfn "$SHARED_PATH/node_modules" node_modules
+          else
+              echo "   📦 Installing npm packages..."
+
+              # Fresh install
+              npm ci --prefer-offline 2>/dev/null || npm install
+
+              # Cache node_modules
+              rm -rf "$SHARED_PATH/node_modules" 2>/dev/null || true
+              mv node_modules "$SHARED_PATH/node_modules"
+              ln -sfn "$SHARED_PATH/node_modules" node_modules
+
+              # Save hash
+              echo "$LOCK_HASH" > "$SHARED_PATH/.cache/npm_hash"
+              echo "   ✓ Dependencies cached"
+          fi
+
+          echo "✅ Dependencies ready"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 7: BUILD
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "🔨 STAGE 7: Building Application"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          cd "$RELEASE_PATH"
+
+          # Check for build script in package.json
+          if grep -q '"build"' package.json; then
+              echo "   🔨 Running npm run build..."
+              npm run build
+          else
+              echo "   ⚠️  No build script found in package.json"
+          fi
+
+          # Find and prepare build output
+          BUILD_DIR=""
+          if [ -d "build" ]; then
+              BUILD_DIR="build"
+              echo "   📁 Build output found in ./build (Create React App)"
+          elif [ -d "dist" ]; then
+              BUILD_DIR="dist"
+              echo "   📁 Build output found in ./dist (Vite/other)"
+          elif [ -d ".next" ]; then
+              # This shouldn't happen for React, but handle it
+              echo "   ⚠️  Found .next - this might be a Next.js project"
+          fi
+
+          if [ -z "$BUILD_DIR" ]; then
+              echo "   ❌ No build output directory found (build/ or dist/)"
+              echo "   Make sure your build script creates output in build/ or dist/"
+              exit 1
+          fi
+
+          # Create _site directory for static content
+          echo "   📦 Preparing static files..."
+          mkdir -p "$RELEASE_PATH/_site"
+          cp -r "$RELEASE_PATH/$BUILD_DIR"/* "$RELEASE_PATH/_site/"
+
+          # Count files
+          FILE_COUNT=$(find "$RELEASE_PATH/_site" -type f | wc -l)
+          echo "   ✓ Prepared $FILE_COUNT static files"
+
+          echo "✅ Build complete"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 8: SERVICE CONFIGURATION (Static Site)
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "⚙️  STAGE 8: Configuring Static Site"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          cd "$RELEASE_PATH"
+
+          # For static sites, we configure LiteSpeed to serve from _site directory
+          # Update the vhost configuration
+
+          if [ -f "$VHOST_CONF" ]; then
+              echo "   🌐 Configuring LiteSpeed for static site..."
+
+              # Backup existing config
+              cp "$VHOST_CONF" "$VHOST_CONF.bak.$(date +%s)"
+
+              # Check if we need to add SPA (Single Page App) rewrite rules
+              # React Router needs all routes to return index.html
+              if [ -f "$RELEASE_PATH/_site/index.html" ]; then
+                  # Add rewrite rules for SPA if not already present
+                  if ! grep -q "RewriteRule .* /index.html" "$VHOST_CONF" 2>/dev/null; then
+                      echo "" >> "$VHOST_CONF"
+                      echo "# React SPA Rewrite Rules" >> "$VHOST_CONF"
+                      echo "rewrite  {" >> "$VHOST_CONF"
+                      echo "  enable                  1" >> "$VHOST_CONF"
+                      echo "  autoLoadHtaccess        1" >> "$VHOST_CONF"
+                      echo "  rules                   <<<END_RULES" >> "$VHOST_CONF"
+                      echo "RewriteCond %{REQUEST_FILENAME} !-f" >> "$VHOST_CONF"
+                      echo "RewriteCond %{REQUEST_FILENAME} !-d" >> "$VHOST_CONF"
+                      echo "RewriteRule .* /index.html [L]" >> "$VHOST_CONF"
+                      echo "END_RULES" >> "$VHOST_CONF"
+                      echo "}" >> "$VHOST_CONF"
+                      echo "   ✓ Added SPA rewrite rules for React Router"
+                  fi
+              fi
+
+              chown lsadm:nobody "$VHOST_CONF" 2>/dev/null || true
+
+              # Restart LiteSpeed to apply changes
+              systemctl restart lsws 2>/dev/null && sleep 2
+              echo "   ✓ LiteSpeed restarted"
+          fi
+
+          # Create .htaccess for fallback (in case rewrite rules don't work)
+          cat > "$RELEASE_PATH/_site/.htaccess" << 'HTACCESS'
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /
+            RewriteRule ^index\.html$ - [L]
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule . /index.html [L]
+          </IfModule>
+
+          # Cache static assets
+          <IfModule mod_expires.c>
+            ExpiresActive On
+            ExpiresByType text/html "access plus 1 hour"
+            ExpiresByType text/css "access plus 1 year"
+            ExpiresByType application/javascript "access plus 1 year"
+            ExpiresByType image/png "access plus 1 year"
+            ExpiresByType image/jpg "access plus 1 year"
+            ExpiresByType image/jpeg "access plus 1 year"
+            ExpiresByType image/gif "access plus 1 year"
+            ExpiresByType image/svg+xml "access plus 1 year"
+            ExpiresByType font/woff2 "access plus 1 year"
+          </IfModule>
+
+          # Gzip compression
+          <IfModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+          </IfModule>
+          HTACCESS
+
+          echo "   ✓ Created .htaccess with SPA routing and caching"
+
+          # No systemd service needed for static React
+          echo "✅ Static site configuration complete"
+          echo "   📁 Static files will be served from: $PUBLIC_HTML/_site"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 9: ATOMIC CUTOVER (Static Site)
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "🔄 STAGE 9: Atomic Cutover"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          # For static sites, we point public_html to the _site directory within the release
+          STATIC_PATH="$RELEASE_PATH/_site"
+
+          # Verify static files exist
+          if [ ! -d "$STATIC_PATH" ] || [ ! -f "$STATIC_PATH/index.html" ]; then
+              echo "   ❌ Static files not found in $STATIC_PATH"
+              echo "   Make sure the build step completed successfully"
+              exit 1
+          fi
+
+          # Save previous release for potential rollback
+          if [ -L "$PUBLIC_HTML" ]; then
+              PREVIOUS_RELEASE=$(readlink -f "$PUBLIC_HTML")
+              echo "   Previous release: $PREVIOUS_RELEASE"
+          fi
+
+          # Handle public_html
+          if [ -L "$PUBLIC_HTML" ]; then
+              echo "   🔗 Removing existing symlink..."
+              rm -f "$PUBLIC_HTML"
+          elif [ -d "$PUBLIC_HTML" ]; then
+              echo "   📁 Backing up existing public_html directory..."
+              BACKUP_PATH="$BASE_PATH/public_html_backup_$(date +%Y%m%d_%H%M%S)"
+              mv "$PUBLIC_HTML" "$BACKUP_PATH"
+              echo "   ✓ Backed up to: $BACKUP_PATH"
+          elif [ -e "$PUBLIC_HTML" ]; then
+              rm -rf "$PUBLIC_HTML"
+          fi
+
+          # Create symlink to static files
+          ln -sfn "$STATIC_PATH" "$PUBLIC_HTML"
+
+          # Verify symlink
+          if [ -L "$PUBLIC_HTML" ] && [ -f "$PUBLIC_HTML/index.html" ]; then
+              echo "   ✓ Symlink created: $PUBLIC_HTML -> $STATIC_PATH"
+              echo "✅ Cutover complete"
+          else
+              echo "   ❌ Failed to create symlink or index.html not found"
+              exit 1
+          fi
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 10: VERIFICATION
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "🔍 STAGE 10: Deployment Verification"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          sleep 5
+
+          # Check service status
+          SERVICE_OK=false
+          if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
+              SERVICE_OK=true
+              echo "   ✅ Service is running"
+          else
+              echo "   ❌ Service is not running"
+              echo "   Checking logs..."
+              journalctl -u "$SERVICE_NAME" -n 10 --no-pager || true
+          fi
+
+          # Check if app responds
+          APP_OK=false
+          if curl -sf --connect-timeout 5 "http://127.0.0.1:8008/" > /dev/null 2>&1; then
+              APP_OK=true
+              echo "   ✅ Application responding on port 8008"
+          else
+              echo "   ⚠️  Application not responding on port 8008"
+          fi
+
+          # Check proxy config
+          PROXY_OK=false
+          if [ -f "$VHOST_CONF" ] && grep -q "$PROXY_NAME" "$VHOST_CONF" 2>/dev/null; then
+              PROXY_OK=true
+              echo "   ✅ Proxy configured"
+          else
+              echo "   ⚠️  Proxy not configured"
+          fi
+
+          # Overall status
+          if [ "$SERVICE_OK" = true ]; then
+              DEPLOY_SUCCESS=true
+              echo ""
+              echo "═══════════════════════════════════════════════════════════════════════════"
+              echo "✅ DEPLOYMENT SUCCESSFUL"
+              echo "═══════════════════════════════════════════════════════════════════════════"
+          else
+              echo ""
+              echo "═══════════════════════════════════════════════════════════════════════════"
+              echo "❌ DEPLOYMENT VERIFICATION FAILED"
+              echo "═══════════════════════════════════════════════════════════════════════════"
+              exit 1
+          fi
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # STAGE 11: CLEANUP
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "🧹 STAGE 11: Cleanup"
+          echo "───────────────────────────────────────────────────────────────────────────"
+
+          # Keep only last 3 releases
+          cd "$RELEASES_PATH"
+          RELEASE_COUNT=$(ls -1d */ 2>/dev/null | wc -l)
+
+          if [ "$RELEASE_COUNT" -gt 3 ]; then
+              echo "   Cleaning old releases (keeping last 3)..."
+              ls -1dt */ | tail -n +4 | xargs rm -rf
+              echo "   ✓ Removed $((RELEASE_COUNT - 3)) old release(s)"
+          else
+              echo "   ✓ No cleanup needed ($RELEASE_COUNT releases)"
+          fi
+
+          echo "✅ Cleanup complete"
+
+          # ═══════════════════════════════════════════════════════════════════════════
+          # DEPLOYMENT COMPLETE
+          # ═══════════════════════════════════════════════════════════════════════════
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════════════════"
+          echo "🎉 DEPLOYMENT COMPLETE"
+          echo "═══════════════════════════════════════════════════════════════════════════"
+          echo "📅 Completed at: $(date)"
+          echo "🌐 URL: https://impact.rtcknowledge.com"
+          echo "📂 Release: $RELEASE_PATH"
+          echo "═══════════════════════════════════════════════════════════════════════════"
+    
+    - name: Deployment Summary
+      if: always()
+      run: |
+        echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Project:** Impact Analysis Frontend" >> $GITHUB_STEP_SUMMARY
+        echo "- **Domain:** impact.rtcknowledge.com" >> $GITHUB_STEP_SUMMARY
+        echo "- **Framework:** react" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch:** main" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
