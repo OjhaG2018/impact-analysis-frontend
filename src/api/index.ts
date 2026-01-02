@@ -11,7 +11,7 @@ import {
   SectorInfo,
 } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://impact.rtcknowledge.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://impactanalysis.rtcknowledge.com/api';
 // const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api';
 
 class ApiService {
