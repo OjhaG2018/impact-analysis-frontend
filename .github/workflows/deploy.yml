@@ -568,51 +568,36 @@ jobs:
           echo "🔍 STAGE 10: Deployment Verification"
           echo "───────────────────────────────────────────────────────────────────────────"
 
-          sleep 5
-
-          # Check service status
-          SERVICE_OK=false
-          if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
-              SERVICE_OK=true
-              echo "   ✅ Service is running"
+          # Check if static files are accessible
+          if [ -f "$PUBLIC_HTML/index.html" ]; then
+              echo "   ✅ index.html is accessible"
           else
-              echo "   ❌ Service is not running"
-              echo "   Checking logs..."
-              journalctl -u "$SERVICE_NAME" -n 10 --no-pager || true
-          fi
-
-          # Check if app responds
-          APP_OK=false
-          if curl -sf --connect-timeout 5 "http://127.0.0.1:8008/" > /dev/null 2>&1; then
-              APP_OK=true
-              echo "   ✅ Application responding on port 8008"
-          else
-              echo "   ⚠️  Application not responding on port 8008"
-          fi
-
-          # Check proxy config
-          PROXY_OK=false
-          if [ -f "$VHOST_CONF" ] && grep -q "$PROXY_NAME" "$VHOST_CONF" 2>/dev/null; then
-              PROXY_OK=true
-              echo "   ✅ Proxy configured"
-          else
-              echo "   ⚠️  Proxy not configured"
-          fi
-
-          # Overall status
-          if [ "$SERVICE_OK" = true ]; then
-              DEPLOY_SUCCESS=true
-              echo ""
-              echo "═══════════════════════════════════════════════════════════════════════════"
-              echo "✅ DEPLOYMENT SUCCESSFUL"
-              echo "═══════════════════════════════════════════════════════════════════════════"
-          else
-              echo ""
-              echo "═══════════════════════════════════════════════════════════════════════════"
-              echo "❌ DEPLOYMENT VERIFICATION FAILED"
-              echo "═══════════════════════════════════════════════════════════════════════════"
+              echo "   ❌ index.html not found at $PUBLIC_HTML"
               exit 1
           fi
+
+          # Count deployed files
+          FILE_COUNT=$(find "$PUBLIC_HTML" -type f 2>/dev/null | wc -l)
+          echo "   📁 Deployed files: $FILE_COUNT"
+
+          # Check LiteSpeed is running
+          if systemctl is-active --quiet lsws 2>/dev/null; then
+              echo "   ✅ LiteSpeed is running"
+          else
+              echo "   ⚠️  LiteSpeed status unknown (may be using different web server)"
+          fi
+
+          # Quick HTTP check
+          sleep 2
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1/" 2>/dev/null || echo "000")
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+              echo "   ✅ HTTP response: $HTTP_CODE"
+          else
+              echo "   ⚠️  HTTP response: $HTTP_CODE (may need DNS propagation)"
+          fi
+
+          DEPLOY_SUCCESS=true
+          echo "✅ React app deployed successfully"
 
           # ═══════════════════════════════════════════════════════════════════════════
           # STAGE 11: CLEANUP
