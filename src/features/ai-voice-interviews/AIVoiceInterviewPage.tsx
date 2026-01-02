@@ -231,7 +231,7 @@ const AnimatedWaveform: React.FC<{ isActive: boolean; level: number }> = ({ isAc
 
 // ============= Video Preview Component with Recording Time =============
 const VideoPreview: React.FC<{ 
-  videoRef: React.RefObject<HTMLVideoElement | null>; 
+  videoRef: React.RefObject<HTMLVideoElement>; 
   isRecording: boolean;
   isVisible: boolean;
   recordingTime: number;
