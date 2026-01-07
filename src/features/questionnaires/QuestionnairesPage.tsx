@@ -504,15 +504,15 @@ const QuestionnairesPage: React.FC = () => {
     if (!statistics) return null;
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{statistics.total_templates}</p>
-              <p className="text-sm text-gray-500">Total Templates</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{statistics.total_templates}</p>
+              <p className="text-xs sm:text-sm text-gray-500">Total Templates</p>
             </div>
           </div>
         </Card>
@@ -522,8 +522,8 @@ const QuestionnairesPage: React.FC = () => {
               <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{statistics.active_templates}</p>
-              <p className="text-sm text-gray-500">Active</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{statistics.active_templates}</p>
+              <p className="text-xs sm:text-sm text-gray-500">Active</p>
             </div>
           </div>
         </Card>
@@ -533,8 +533,8 @@ const QuestionnairesPage: React.FC = () => {
               <Sparkles className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{statistics.ai_enabled_templates}</p>
-              <p className="text-sm text-gray-500">AI-Enabled</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{statistics.ai_enabled_templates}</p>
+              <p className="text-xs sm:text-sm text-gray-500">AI-Enabled</p>
             </div>
           </div>
         </Card>
@@ -544,8 +544,8 @@ const QuestionnairesPage: React.FC = () => {
               <ClipboardList className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{statistics.total_questions}</p>
-              <p className="text-sm text-gray-500">Total Questions</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{statistics.total_questions}</p>
+              <p className="text-xs sm:text-sm text-gray-500">Total Questions</p>
             </div>
           </div>
         </Card>
@@ -556,8 +556,8 @@ const QuestionnairesPage: React.FC = () => {
   // ============== RENDER: FILTERS ==============
   const renderFilters = () => (
     <Card className="p-4 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -616,20 +616,20 @@ const QuestionnairesPage: React.FC = () => {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map((template) => (
-            <Card key={template.id} className="p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-start gap-4">
+            <Card key={template.id} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-start gap-3 sm:gap-4">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${getSectorColor(template.sector)}20` }}
                 >
-                  <ClipboardList className="w-6 h-6" style={{ color: getSectorColor(template.sector) }} />
+                  <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: getSectorColor(template.sector) }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <h3
-                      className="font-semibold text-gray-900 truncate cursor-pointer hover:text-emerald-600"
+                      className="font-semibold text-gray-900 truncate cursor-pointer hover:text-emerald-600 text-sm sm:text-base"
                       onClick={() => fetchTemplateDetail(template.id)}
                     >
                       {template.name}
@@ -648,9 +648,9 @@ const QuestionnairesPage: React.FC = () => {
                     </span>
                   </p>
 
-                  <p className="text-sm text-gray-500 mt-2 line-clamp-2">{template.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-2 line-clamp-2">{template.description}</p>
 
-                  <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 sm:gap-4 mt-3 text-xs text-gray-500">
                     <span>{template.section_count || template.total_sections || 0} sections</span>
                     <span>{template.question_count || template.total_questions || 0} questions</span>
                     <span>v{template.version}</span>
@@ -659,34 +659,34 @@ const QuestionnairesPage: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
                     <button
                       onClick={() => fetchTemplateDetail(template.id)}
-                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium"
                     >
-                      <Eye className="w-3.5 h-3.5" /> View
+                      <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">View</span>
                     </button>
                     <button
                       onClick={() => handleEditTemplate(template)}
-                      className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-purple-600 hover:text-purple-800"
                     >
-                      <Edit className="w-3.5 h-3.5" /> Edit
+                      <Edit className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Edit</span>
                     </button>
                     <button
                       onClick={() => handleCloneTemplate(template)}
-                      className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 hover:text-gray-800"
                     >
-                      <Copy className="w-3.5 h-3.5" /> Clone
+                      <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Clone</span>
                     </button>
                     <button
                       onClick={() => handleExportTemplate(template)}
-                      className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-green-600 hover:text-green-800"
                     >
-                      <Download className="w-3.5 h-3.5" />
+                      <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </button>
                     {!template.is_default && (
                       <button
                         onClick={() => setDeleteConfirm({ type: 'template', item: template })}
-                        className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 ml-auto"
+                        className="flex items-center gap-1 text-xs sm:text-sm text-red-600 hover:text-red-800 ml-auto"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     )}
                   </div>
@@ -720,8 +720,8 @@ const QuestionnairesPage: React.FC = () => {
     return (
       <div>
         {/* Header */}
-        <Card className="p-6 mb-6">
-          <div className="flex items-start justify-between">
+        <Card className="p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
               <button
                 onClick={() => { setViewMode('list'); setSelectedTemplate(null); }}
@@ -729,7 +729,7 @@ const QuestionnairesPage: React.FC = () => {
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Templates
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">{selectedTemplate.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{selectedTemplate.name}</h1>
               <p className="text-gray-500 mt-1">{selectedTemplate.description}</p>
 
               <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -754,12 +754,12 @@ const QuestionnairesPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleEditTemplate(selectedTemplate)}>
-                <Edit className="w-4 h-4" /> Edit
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => handleEditTemplate(selectedTemplate)} className="flex-shrink-0">
+                <Edit className="w-4 h-4" /> <span className="hidden sm:inline">Edit</span>
               </Button>
-              <Button onClick={() => openSectionModal()}>
-                <Plus className="w-4 h-4" /> Add Section
+              <Button onClick={() => openSectionModal()} className="flex-shrink-0">
+                <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Section</span>
               </Button>
             </div>
           </div>
@@ -774,17 +774,17 @@ const QuestionnairesPage: React.FC = () => {
                 onClick={() => toggleSection(section.id)}
               >
                 <div className="flex items-center gap-3">
-                  <GripVertical className="w-5 h-5 text-gray-300" />
+                  <GripVertical className="w-5 h-5 text-gray-300 hidden sm:block" />
                   {expandedSections.has(section.id) ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
                   ) : (
                     <ChevronDown className="w-5 h-5 text-gray-400" />
                   )}
                   <div>
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
                       {sIdx + 1}. {section.title}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       {section.question_count || section.questions?.length || 0} questions
                       {section.section_type && section.section_type !== 'custom' && (
                         <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded">
@@ -794,9 +794,9 @@ const QuestionnairesPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                <div className="flex gap-1 sm:gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button size="sm" variant="outline" onClick={() => openQuestionModal(section)}>
-                    <Plus className="w-3 h-3" /> Question
+                    <Plus className="w-3 h-3" /> <span className="hidden sm:inline">Question</span>
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => openSectionModal(section)}>
                     <Edit className="w-3 h-3" />
@@ -834,7 +834,7 @@ const QuestionnairesPage: React.FC = () => {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="text-sm font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                              <span className="text-xs sm:text-sm font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
                                 Q{qIdx + 1}
                               </span>
                               <Badge variant="default">
@@ -849,28 +849,28 @@ const QuestionnairesPage: React.FC = () => {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-gray-900">{question.text}</p>
+                            <p className="text-gray-900 text-sm sm:text-base">{question.text}</p>
                             {question.options && question.options.length > 0 && (
-                              <p className="text-sm text-gray-500 mt-1">
+                              <p className="text-xs sm:text-sm text-gray-500 mt-1">
                                 Options: {question.options.join(' | ')}
                               </p>
                             )}
                             {question.help_text && (
-                              <p className="text-sm text-gray-400 mt-1 italic">{question.help_text}</p>
+                              <p className="text-xs sm:text-sm text-gray-400 mt-1 italic">{question.help_text}</p>
                             )}
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-1 sm:gap-2">
                             <button
                               onClick={() => openQuestionModal(section, question)}
                               className="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                             <button
                               onClick={() => setDeleteConfirm({ type: 'question', item: question })}
                               className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </div>
@@ -925,7 +925,7 @@ const QuestionnairesPage: React.FC = () => {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select
             label="Sector *"
             value={templateForm.sector}
@@ -940,7 +940,7 @@ const QuestionnairesPage: React.FC = () => {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Version"
             value={templateForm.version}
@@ -985,16 +985,17 @@ const QuestionnairesPage: React.FC = () => {
           </label>
         </div>
 
-        <div className="flex gap-3 pt-4 border-t">
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
           <Button
             variant="secondary"
             type="button"
             onClick={() => { setShowTemplateModal(false); resetTemplateForm(); }}
             disabled={submitting}
+            className="w-full sm:w-auto"
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={submitting}>
+          <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
             {submitting ? 'Saving...' : isEditMode ? 'Update Template' : 'Create Template'}
           </Button>
         </div>
@@ -1091,7 +1092,7 @@ const QuestionnairesPage: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Question Type *"
               value={questionForm.question_type}
@@ -1126,7 +1127,7 @@ const QuestionnairesPage: React.FC = () => {
             placeholder="Additional guidance for respondents"
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Sensitivity Level"
               value={questionForm.sensitivity_level}
@@ -1157,13 +1158,14 @@ const QuestionnairesPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex gap-3 pt-4 border-t sticky bottom-0 bg-white">
-            <Button variant="secondary" onClick={() => setShowQuestionModal(false)} disabled={submitting}>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t sticky bottom-0 bg-white">
+            <Button variant="secondary" onClick={() => setShowQuestionModal(false)} disabled={submitting} className="w-full sm:w-auto">
               Cancel
             </Button>
             <Button
               onClick={handleSaveQuestion}
               disabled={!questionForm.text.trim() || (needsOptions && !optionsText.trim()) || submitting}
+              className="w-full sm:w-auto"
             >
               {submitting ? 'Saving...' : editingQuestion ? 'Save Changes' : 'Add Question'}
             </Button>
@@ -1241,18 +1243,18 @@ const QuestionnairesPage: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Questionnaires</h1>
           <p className="text-gray-500 mt-1">Manage survey templates, sections, and questions</p>
         </div>
         {viewMode === 'list' && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/questionnaires/questions')}>
-              <BookOpen className="w-4 h-4" /> Question Bank
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => navigate('/questionnaires/questions')} className="flex-shrink-0">
+              <BookOpen className="w-4 h-4" /> <span className="hidden sm:inline">Question Bank</span>
             </Button>
-            <Button onClick={() => { resetTemplateForm(); setShowTemplateModal(true); }}>
-              <Plus className="w-4 h-4" /> New Template
+            <Button onClick={() => { resetTemplateForm(); setShowTemplateModal(true); }} className="flex-shrink-0">
+              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New Template</span>
             </Button>
           </div>
         )}

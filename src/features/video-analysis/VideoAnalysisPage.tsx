@@ -475,43 +475,46 @@ const VideoAnalysisPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-6">
       {/* Header */}
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Video Analysis Dashboard</h1>
-          <p className="text-gray-600 mt-1">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Video Analysis Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Review AI analysis of beneficiary interview videos
-            <span className="ml-2 text-green-600 text-sm font-medium">
+            <span className="block sm:inline sm:ml-2 text-green-600 text-xs sm:text-sm font-medium">
               🆓 Using FREE Local Analysis (OpenCV)
             </span>
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button 
             onClick={() => navigate('/sentiment-analysis')}
             variant="secondary"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 flex-shrink-0"
           >
             <Brain className="w-4 h-4" />
-            Sentiment Dashboard
+            <span className="hidden sm:inline">Sentiment Dashboard</span>
+            <span className="sm:hidden">Sentiment</span>
           </Button>
           <Button 
             onClick={() => navigate('/upload-videos')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 flex-shrink-0"
           >
             <Upload className="w-4 h-4" />
-            Upload Videos
+            <span className="hidden sm:inline">Upload Videos</span>
+            <span className="sm:hidden">Upload</span>
           </Button>
           {stats.pending > 0 && (
             <Button 
               onClick={triggerBulkAnalysis}
               variant="secondary"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 flex-shrink-0"
               disabled={isAnalyzing !== null}
             >
               <Zap className="w-4 h-4" />
-              Analyze All ({stats.pending})
+              <span className="hidden sm:inline">Analyze All ({stats.pending})</span>
+              <span className="sm:hidden">All ({stats.pending})</span>
             </Button>
           )}
         </div>
@@ -519,67 +522,67 @@ const VideoAnalysisPage: React.FC = () => {
 
       {/* Alerts */}
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center justify-between">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 underline">
+        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start justify-between gap-2">
+          <span className="text-sm sm:text-base">{error}</span>
+          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 underline text-sm flex-shrink-0">
             Dismiss
           </button>
         </div>
       )}
       {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center justify-between">
-          <span>{success}</span>
-          <button onClick={() => setSuccess(null)} className="ml-2 text-green-500 hover:text-green-700 underline">
+        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-start justify-between gap-2">
+          <span className="text-sm sm:text-base">{success}</span>
+          <button onClick={() => setSuccess(null)} className="text-green-500 hover:text-green-700 underline text-sm flex-shrink-0">
             Dismiss
           </button>
         </div>
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card 
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'all' && !filter.needsReview ? 'ring-2 ring-blue-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'all' && !filter.needsReview ? 'ring-2 ring-blue-500' : ''}`}
           onClick={() => setFilter({ status: 'all', needsReview: false })}
         >
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-500">Total Videos</div>
+          <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.total}</div>
+          <div className="text-xs sm:text-sm text-gray-500">Total Videos</div>
         </Card>
         <Card 
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'completed' ? 'ring-2 ring-green-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'completed' ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => setFilter({ status: 'completed', needsReview: false })}
         >
-          <div className="text-2xl font-bold text-green-600">{stats.analyzed}</div>
-          <div className="text-sm text-gray-500">Analyzed</div>
+          <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.analyzed}</div>
+          <div className="text-xs sm:text-sm text-gray-500">Analyzed</div>
         </Card>
         <Card 
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
           onClick={() => setFilter({ status: 'pending', needsReview: false })}
         >
-          <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-          <div className="text-sm text-gray-500">Pending</div>
+          <div className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.pending}</div>
+          <div className="text-xs sm:text-sm text-gray-500">Pending</div>
         </Card>
         <Card 
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filter.needsReview ? 'ring-2 ring-red-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filter.needsReview ? 'ring-2 ring-red-500' : ''}`}
           onClick={() => setFilter({ status: 'all', needsReview: true })}
         >
-          <div className="text-2xl font-bold text-red-600">{stats.needsReview}</div>
-          <div className="text-sm text-gray-500">Needs Review</div>
+          <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.needsReview}</div>
+          <div className="text-xs sm:text-sm text-gray-500">Needs Review</div>
         </Card>
-        <Card className="p-4 bg-green-50">
-          <div className="text-2xl font-bold text-green-600">{stats.totalTokens === 0 ? 'FREE' : stats.totalTokens}</div>
-          <div className="text-sm text-green-700">API Tokens Used</div>
+        <Card className="p-3 sm:p-4 bg-green-50">
+          <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.totalTokens === 0 ? 'FREE' : stats.totalTokens}</div>
+          <div className="text-xs sm:text-sm text-green-700">API Tokens Used</div>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div>
+      <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+          <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={filter.status}
               onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className="border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -588,22 +591,25 @@ const VideoAnalysisPage: React.FC = () => {
               <option value="failed">Failed</option>
             </select>
           </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="needsReview"
-              checked={filter.needsReview}
-              onChange={(e) => setFilter({ ...filter, needsReview: e.target.checked })}
-              className="rounded border-gray-300 text-emerald-600 mr-2"
-            />
-            <label htmlFor="needsReview" className="text-sm text-gray-600">
-              Show only needs review
-            </label>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="needsReview"
+                checked={filter.needsReview}
+                onChange={(e) => setFilter({ ...filter, needsReview: e.target.checked })}
+                className="rounded border-gray-300 text-emerald-600 mr-2"
+              />
+              <label htmlFor="needsReview" className="text-sm text-gray-600">
+                <span className="hidden sm:inline">Show only needs review</span>
+                <span className="sm:hidden">Needs review</span>
+              </label>
+            </div>
+            <Button onClick={fetchVideos} variant="secondary" className="flex items-center gap-2 flex-shrink-0">
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
           </div>
-          <Button onClick={fetchVideos} variant="secondary" className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </Button>
         </div>
       </Card>
 
@@ -624,7 +630,7 @@ const VideoAnalysisPage: React.FC = () => {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {videos.map(video => {
             const sentiment = sentimentData[video.id];
             const isLoadingSentiment = loadingSentiment[video.id];
@@ -636,7 +642,7 @@ const VideoAnalysisPage: React.FC = () => {
                 onClick={() => setSelectedVideo(video)}
               >
                 {/* Thumbnail */}
-                <div className="relative h-40 bg-gray-200">
+                <div className="relative h-32 sm:h-40 bg-gray-200">
                   {video.thumbnail_url ? (
                     <img 
                       src={video.thumbnail_url} 
@@ -648,7 +654,7 @@ const VideoAnalysisPage: React.FC = () => {
                       <span className="text-4xl">🎥</span>
                     </div>
                   )}
-                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
                     {formatDuration(video.duration_seconds || 0)}
                   </div>
                   <div className="absolute top-2 right-2">
@@ -677,9 +683,9 @@ const VideoAnalysisPage: React.FC = () => {
                 </div>
 
                 {/* Info */}
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-900">{video.beneficiary_name || 'Unknown'}</h3>
-                  <p className="text-sm text-gray-500">{video.project_title || 'Unknown Project'}</p>
+                <div className="p-3 sm:p-4">
+                  <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">{video.beneficiary_name || 'Unknown'}</h3>
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">{video.project_title || 'Unknown Project'}</p>
                   <p className="text-xs text-gray-400 mt-1">
                     {video.recorded_at ? new Date(video.recorded_at).toLocaleDateString() : '-'}
                   </p>
@@ -730,7 +736,7 @@ const VideoAnalysisPage: React.FC = () => {
                   )}
 
                   {/* Actions */}
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-1 sm:gap-2">
                     {(video.analysis_status === 'pending' || video.analysis_status === 'failed') && (
                       <Button
                         size="sm"
@@ -739,6 +745,7 @@ const VideoAnalysisPage: React.FC = () => {
                           triggerAnalysis(video.id, true);
                         }}
                         disabled={isAnalyzing !== null || isAnalyzingSentiment !== null}
+                        className="text-xs"
                       >
                         {isAnalyzing === video.id ? 'Analyzing...' : 'Analyze'}
                       </Button>
@@ -752,6 +759,7 @@ const VideoAnalysisPage: React.FC = () => {
                           triggerAnalysis(video.id, true);
                         }}
                         disabled={isAnalyzing !== null || isAnalyzingSentiment !== null}
+                        className="text-xs"
                       >
                         Re-analyze
                       </Button>
@@ -766,10 +774,11 @@ const VideoAnalysisPage: React.FC = () => {
                           e.stopPropagation();
                           viewSentimentDetails(video.id);
                         }}
-                        className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                        className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 text-xs"
                       >
                         <Brain className="w-3 h-3 mr-1" />
-                        Sentiment
+                        <span className="hidden sm:inline">Sentiment</span>
+                        <span className="sm:hidden">Sent</span>
                       </Button>
                     ) : video.analysis_status === 'completed' && !isLoadingSentiment ? (
                       <Button
@@ -780,10 +789,11 @@ const VideoAnalysisPage: React.FC = () => {
                           triggerSentimentAnalysis(video.id);
                         }}
                         disabled={isAnalyzingSentiment !== null}
-                        className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                        className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 text-xs"
                       >
                         <Brain className="w-3 h-3 mr-1" />
-                        {isAnalyzingSentiment === video.id ? 'Analyzing...' : 'Analyze Sentiment'}
+                        <span className="hidden sm:inline">{isAnalyzingSentiment === video.id ? 'Analyzing...' : 'Analyze Sentiment'}</span>
+                        <span className="sm:hidden">{isAnalyzingSentiment === video.id ? 'Analyzing...' : 'Sent'}</span>
                       </Button>
                     ) : null}
                     
@@ -794,6 +804,7 @@ const VideoAnalysisPage: React.FC = () => {
                         e.stopPropagation();
                         setSelectedVideo(video);
                       }}
+                      className="text-xs"
                     >
                       Details
                     </Button>
@@ -803,10 +814,10 @@ const VideoAnalysisPage: React.FC = () => {
                       size="sm"
                       variant="danger"
                       onClick={(e) => confirmDelete(video, e)}
-                      className="ml-auto"
+                      className="ml-auto text-xs"
                       title="Delete video"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   </div>
                 </div>

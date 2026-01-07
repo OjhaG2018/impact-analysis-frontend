@@ -368,7 +368,7 @@ const TurnIndicator: React.FC<{
 
   return (
     <div 
-      className={`w-full max-w-sm mx-auto p-4 rounded-2xl border-2 ${config.borderColor} ${config.bgColor} transition-all duration-300 cursor-pointer`}
+      className={`w-full max-w-sm mx-auto p-3 sm:p-4 rounded-2xl border-2 ${config.borderColor} ${config.bgColor} transition-all duration-300 cursor-pointer`}
       onClick={async () => {
         // Always try to resume AudioContext on any click
         if (onContainerClick) {
@@ -378,8 +378,8 @@ const TurnIndicator: React.FC<{
     >
       {/* Status */}
       <div className="text-center mb-3">
-        <p className="font-bold text-gray-800 text-xl">{config.text}</p>
-        <p className="text-sm text-gray-500">{config.subText}</p>
+        <p className="font-bold text-gray-800 text-lg sm:text-xl">{config.text}</p>
+        <p className="text-xs sm:text-sm text-gray-500">{config.subText}</p>
       </div>
       
       {/* Waveform visualization */}
@@ -406,18 +406,20 @@ const TurnIndicator: React.FC<{
         {isRecording ? (
           <button
             onClick={onManualStop}
-            className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-full font-medium hover:bg-red-600 transition-all shadow-lg"
+            className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-red-500 text-white rounded-full font-medium hover:bg-red-600 transition-all shadow-lg text-sm sm:text-base"
           >
-            <MicOff className="w-5 h-5" />
-            Stop Recording
+            <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Stop Recording</span>
+            <span className="sm:hidden">Stop</span>
           </button>
         ) : (isListening || canRecord) ? (
           <button
             onClick={onManualStart}
-            className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-full font-medium hover:bg-green-600 transition-all shadow-lg animate-pulse"
+            className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-500 text-white rounded-full font-medium hover:bg-green-600 transition-all shadow-lg animate-pulse text-sm sm:text-base"
           >
-            <Mic className="w-5 h-5" />
-            {handsFreeMode ? 'Tap to Record' : 'Start Recording'}
+            <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">{handsFreeMode ? 'Tap to Record' : 'Start Recording'}</span>
+            <span className="sm:hidden">Record</span>
           </button>
         ) : null}
       </div>
@@ -425,12 +427,12 @@ const TurnIndicator: React.FC<{
       {/* Mode badges */}
       <div className="flex justify-center gap-2 mt-3">
         {handsFreeMode && (
-          <div className="flex items-center gap-1 px-3 py-1 bg-purple-100 rounded-full">
+          <div className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-purple-100 rounded-full">
             <Headphones className="w-3 h-3 text-purple-600" />
             <span className="text-xs text-purple-600 font-medium">Hands-Free</span>
           </div>
         )}
-        <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${
+        <div className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full ${
           interviewMode === 'video' ? 'bg-blue-100' : 'bg-gray-100'
         }`}>
           {interviewMode === 'video' ? (
@@ -476,25 +478,25 @@ const LeaveConfirmModal: React.FC<{
   
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+      <div className="bg-white rounded-xl p-4 sm:p-6 max-w-sm w-full shadow-2xl">
         <div className="text-center mb-4">
-          <div className="w-16 h-16 mx-auto mb-3 bg-yellow-100 rounded-full flex items-center justify-center">
-            <AlertCircle className="w-8 h-8 text-yellow-600" />
+          <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 bg-yellow-100 rounded-full flex items-center justify-center">
+            <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800">Leave Interview?</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800">Leave Interview?</h3>
           <p className="text-gray-500 text-sm mt-1">What would you like to do?</p>
         </div>
         
         {/* Progress Summary */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <div className="text-gray-500">Progress</div>
-              <div className="font-bold text-lg">{answeredQuestions}/{totalQuestions}</div>
+              <div className="text-gray-500 text-xs sm:text-sm">Progress</div>
+              <div className="font-bold text-base sm:text-lg">{answeredQuestions}/{totalQuestions}</div>
             </div>
             <div>
-              <div className="text-gray-500">Total Recording</div>
-              <div className="font-bold text-lg">{formatTimeDetailed(totalRecordingTime)}</div>
+              <div className="text-gray-500 text-xs sm:text-sm">Total Recording</div>
+              <div className="font-bold text-base sm:text-lg">{formatTimeDetailed(totalRecordingTime)}</div>
             </div>
           </div>
         </div>
@@ -503,9 +505,9 @@ const LeaveConfirmModal: React.FC<{
           {/* Pause Option */}
           <button
             onClick={onPause}
-            className="w-full py-3 px-4 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-all flex items-center justify-center gap-2"
+            className="w-full py-2 sm:py-3 px-4 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
           >
-            <Pause className="w-5 h-5" />
+            <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
             Pause & Save Progress
           </button>
           <p className="text-xs text-gray-500 text-center -mt-1">You can resume later from where you left</p>
@@ -513,9 +515,9 @@ const LeaveConfirmModal: React.FC<{
           {/* Stop Option */}
           <button
             onClick={onStop}
-            className="w-full py-3 px-4 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all flex items-center justify-center gap-2"
+            className="w-full py-2 sm:py-3 px-4 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
           >
-            <PhoneOff className="w-5 h-5" />
+            <PhoneOff className="w-4 h-4 sm:w-5 sm:h-5" />
             Stop Interview
           </button>
           <p className="text-xs text-gray-500 text-center -mt-1">End the interview completely</p>
@@ -523,7 +525,7 @@ const LeaveConfirmModal: React.FC<{
           {/* Cancel */}
           <button
             onClick={onClose}
-            className="w-full py-3 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-all"
+            className="w-full py-2 sm:py-3 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-all text-sm sm:text-base"
           >
             Continue Interview
           </button>
@@ -1716,66 +1718,66 @@ const AIVoiceInterviewPage: React.FC = () => {
   // ============= Render Functions =============
   
   const renderModeSelect = () => (
-    <div className="max-w-md mx-auto py-8 px-4">
-      <div className="text-center mb-8">
-        <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-          <Phone className="w-10 h-10 text-white" />
+    <div className="max-w-md mx-auto py-4 sm:py-8 px-4">
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+          <Phone className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Choose Interview Mode</h2>
-        <p className="text-gray-600">How would you like to participate?</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Choose Interview Mode</h2>
+        <p className="text-sm sm:text-base text-gray-600">How would you like to participate?</p>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <button
           onClick={() => handleModeSelect('video')}
-          className="w-full p-6 bg-white border-2 border-blue-200 rounded-2xl hover:border-blue-500 hover:shadow-lg transition-all group"
+          className="w-full p-4 sm:p-6 bg-white border-2 border-blue-200 rounded-xl sm:rounded-2xl hover:border-blue-500 hover:shadow-lg transition-all group"
         >
           <div className="flex items-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-all">
-              <Video className="w-8 h-8 text-blue-600" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-all flex-shrink-0">
+              <Video className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
             </div>
-            <div className="ml-4 text-left flex-1">
-              <h3 className="text-lg font-bold text-gray-800">📹 Video + Audio</h3>
-              <p className="text-sm text-gray-500 mt-1">Camera will record your responses</p>
-              <div className="flex items-center mt-2 text-xs text-blue-600">
-                <Camera className="w-3 h-3 mr-1" />
+            <div className="ml-3 sm:ml-4 text-left flex-1 min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-gray-800">📹 Video + Audio</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Camera will record your responses</p>
+              <div className="flex items-center mt-1 sm:mt-2 text-xs text-blue-600">
+                <Camera className="w-3 h-3 mr-1 flex-shrink-0" />
                 <span>Requires camera permission</span>
               </div>
             </div>
-            <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-all" />
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-blue-500 transition-all flex-shrink-0" />
           </div>
         </button>
         
         <button
           onClick={() => handleModeSelect('audio')}
-          className="w-full p-6 bg-white border-2 border-green-200 rounded-2xl hover:border-green-500 hover:shadow-lg transition-all group"
+          className="w-full p-4 sm:p-6 bg-white border-2 border-green-200 rounded-xl sm:rounded-2xl hover:border-green-500 hover:shadow-lg transition-all group"
         >
           <div className="flex items-center">
-            <div className="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-all">
-              <AudioLines className="w-8 h-8 text-green-600" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-all flex-shrink-0">
+              <AudioLines className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
             </div>
-            <div className="ml-4 text-left flex-1">
-              <h3 className="text-lg font-bold text-gray-800">🎤 Audio Only</h3>
-              <p className="text-sm text-gray-500 mt-1">Voice recording only, no video</p>
-              <div className="flex items-center mt-2 text-xs text-green-600">
-                <Mic className="w-3 h-3 mr-1" />
+            <div className="ml-3 sm:ml-4 text-left flex-1 min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-gray-800">🎤 Audio Only</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Voice recording only, no video</p>
+              <div className="flex items-center mt-1 sm:mt-2 text-xs text-green-600">
+                <Mic className="w-3 h-3 mr-1 flex-shrink-0" />
                 <span>Requires microphone permission</span>
               </div>
             </div>
-            <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-green-500 transition-all" />
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-green-500 transition-all flex-shrink-0" />
           </div>
         </button>
       </div>
       
-      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <p className="text-sm text-yellow-800">
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <p className="text-xs sm:text-sm text-yellow-800">
           <strong>💡 Tip:</strong> Video mode helps us better understand your responses and provides a more personal experience.
         </p>
       </div>
       
       <button
         onClick={() => setInterviewState('ready')}
-        className="w-full mt-4 py-2 text-gray-500 text-sm hover:text-gray-700"
+        className="w-full mt-3 sm:mt-4 py-2 text-gray-500 text-xs sm:text-sm hover:text-gray-700"
       >
         ← Back to settings
       </button>
@@ -1784,30 +1786,30 @@ const AIVoiceInterviewPage: React.FC = () => {
   
   // ============= FIXED: renderStopped with working reset button =============
   const renderStopped = () => (
-    <div className="max-w-md mx-auto py-8 px-4 text-center">
-      <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-        <PhoneOff className="w-10 h-10 text-red-500" />
+    <div className="max-w-md mx-auto py-4 sm:py-8 px-4 text-center">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-red-100 rounded-full flex items-center justify-center">
+        <PhoneOff className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
       </div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Interview Stopped</h2>
-      <p className="text-gray-600 mb-6">The interview has been ended.</p>
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Interview Stopped</h2>
+      <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">The interview has been ended.</p>
       
-      <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <div className="text-2xl font-bold text-gray-700">{session?.answered_questions || 0}</div>
-            <div className="text-sm text-gray-500">Questions Answered</div>
+            <div className="text-xl sm:text-2xl font-bold text-gray-700">{session?.answered_questions || 0}</div>
+            <div className="text-xs sm:text-sm text-gray-500">Questions Answered</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-gray-700">{formatTimeDetailed(totalRecordingTime)}</div>
-            <div className="text-sm text-gray-500">Total Recording</div>
+            <div className="text-xl sm:text-2xl font-bold text-gray-700">{formatTimeDetailed(totalRecordingTime)}</div>
+            <div className="text-xs sm:text-sm text-gray-500">Total Recording</div>
           </div>
         </div>
       </div>
       
-      <p className="text-sm text-gray-500 mb-4">Your responses have been saved. Thank you for your participation.</p>
+      <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">Your responses have been saved. Thank you for your participation.</p>
       
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+        <div className="mb-3 sm:mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-xs sm:text-sm">
           {error}
         </div>
       )}
@@ -1815,17 +1817,19 @@ const AIVoiceInterviewPage: React.FC = () => {
       <button
         onClick={handleStartNewSession}
         disabled={isResetting}
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto gap-2"
+        className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto gap-2 text-sm sm:text-base"
       >
         {isResetting ? (
           <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Resetting...
+            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+            <span className="hidden sm:inline">Resetting...</span>
+            <span className="sm:hidden">Reset...</span>
           </>
         ) : (
           <>
-            <RefreshCw className="w-5 h-5" />
-            Start New Session
+            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Start New Session</span>
+            <span className="sm:hidden">New Session</span>
           </>
         )}
       </button>
@@ -1872,38 +1876,38 @@ const AIVoiceInterviewPage: React.FC = () => {
       
       case 'language_select':
         return (
-          <div className="max-w-md mx-auto py-8 px-4">
-            <div className="text-center mb-8">
-              <Globe className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <div className="max-w-md mx-auto py-4 sm:py-8 px-4">
+            <div className="text-center mb-6 sm:mb-8">
+              <Globe className="w-12 h-12 sm:w-16 sm:h-16 text-blue-500 mx-auto mb-3 sm:mb-4" />
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-2">
                 Welcome, {session?.beneficiary_first_name || session?.beneficiary_name?.split(' ')[0]}!
               </h2>
-              <p className="text-gray-600">Select your preferred language.</p>
+              <p className="text-sm sm:text-base text-gray-600">Select your preferred language.</p>
             </div>
             
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-h-64 overflow-y-auto">
                 {LANGUAGE_OPTIONS.map(lang => (
                   <button
                     key={lang.code}
                     onClick={() => setSelectedLanguage(lang.code)}
-                    className={`p-3 rounded-lg border-2 text-left transition-all ${
+                    className={`p-2 sm:p-3 rounded-lg border-2 text-left transition-all ${
                       selectedLanguage === lang.code
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="font-medium">{lang.nativeName}</div>
-                    <div className="text-sm text-gray-500">{lang.name}</div>
+                    <div className="font-medium text-sm sm:text-base">{lang.nativeName}</div>
+                    <div className="text-xs sm:text-sm text-gray-500">{lang.name}</div>
                   </button>
                 ))}
               </div>
               
               <button
                 onClick={() => setInterviewState('ready')}
-                className="w-full mt-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center"
+                className="w-full mt-4 sm:mt-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center text-sm sm:text-base"
               >
-                Continue <ChevronRight className="w-5 h-5 ml-2" />
+                Continue <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </button>
             </div>
           </div>
@@ -1911,18 +1915,18 @@ const AIVoiceInterviewPage: React.FC = () => {
       
       case 'ready':
         return (
-          <div className="max-w-md mx-auto py-8 px-4">
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                <Headphones className="w-10 h-10 text-white" />
+          <div className="max-w-md mx-auto py-4 sm:py-8 px-4">
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                <Headphones className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Hands-Free Interview</h2>
-              <p className="text-gray-600">Just speak naturally!</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Hands-Free Interview</h2>
+              <p className="text-sm sm:text-base text-gray-600">Just speak naturally!</p>
             </div>
             
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <h3 className="font-semibold text-green-800 mb-2">✨ How it works:</h3>
-              <ol className="text-sm text-green-700 space-y-1">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+              <h3 className="font-semibold text-green-800 mb-2 text-sm sm:text-base">✨ How it works:</h3>
+              <ol className="text-xs sm:text-sm text-green-700 space-y-1">
                 <li>1. Choose video or audio mode</li>
                 <li>2. AI asks a question</li>
                 <li>3. <strong>Just start speaking</strong> - recording auto-starts</li>
@@ -1930,17 +1934,17 @@ const AIVoiceInterviewPage: React.FC = () => {
               </ol>
             </div>
             
-            <div className="bg-white rounded-lg p-4 mb-4 border shadow-sm">
+            <div className="bg-white rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Headphones className="w-5 h-5 mr-2 text-purple-500" />
-                  <span className="font-medium">Hands-Free Mode</span>
+                <div className="flex items-center min-w-0">
+                  <Headphones className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-500 flex-shrink-0" />
+                  <span className="font-medium text-sm sm:text-base truncate">Hands-Free Mode</span>
                 </div>
                 <button
                   onClick={() => setHandsFreeMode(!handsFreeMode)}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${handsFreeMode ? 'bg-purple-600' : 'bg-gray-300'}`}
+                  className={`relative w-12 h-6 sm:w-14 sm:h-7 rounded-full transition-colors flex-shrink-0 ${handsFreeMode ? 'bg-purple-600' : 'bg-gray-300'}`}
                 >
-                  <div className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${handsFreeMode ? 'translate-x-7' : ''}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full shadow transition-transform ${handsFreeMode ? 'translate-x-6 sm:translate-x-7' : ''}`} />
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -1948,14 +1952,14 @@ const AIVoiceInterviewPage: React.FC = () => {
               </p>
             </div>
             
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+              <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                 <div className="text-gray-600">Project:</div>
-                <div className="font-medium text-right">{session?.project_name}</div>
+                <div className="font-medium text-right truncate">{session?.project_name}</div>
                 <div className="text-gray-600">Questions:</div>
                 <div className="font-medium text-right">{session?.total_questions}</div>
                 <div className="text-gray-600">Language:</div>
-                <div className="font-medium text-right">
+                <div className="font-medium text-right truncate">
                   {LANGUAGE_OPTIONS.find(l => l.code === selectedLanguage)?.name}
                 </div>
               </div>
@@ -1963,9 +1967,9 @@ const AIVoiceInterviewPage: React.FC = () => {
             
             <button
               onClick={() => setInterviewState('mode_select')}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl text-lg font-semibold flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
+              className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl text-base sm:text-lg font-semibold flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
             >
-              <Phone className="w-6 h-6 mr-2" />
+              <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
               Start Interview
             </button>
           </div>
@@ -1976,24 +1980,24 @@ const AIVoiceInterviewPage: React.FC = () => {
       
       case 'completed':
         return (
-          <div className="max-w-md mx-auto py-8 px-4 text-center">
-            <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Complete! 🎉</h2>
-            <p className="text-gray-600 mb-6">Thank you, {session?.beneficiary_first_name || session?.beneficiary_name?.split(' ')[0]}!</p>
+          <div className="max-w-md mx-auto py-4 sm:py-8 px-4 text-center">
+            <CheckCircle className="w-16 h-16 sm:w-20 sm:h-20 text-green-500 mx-auto mb-4 sm:mb-6" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Complete! 🎉</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Thank you, {session?.beneficiary_first_name || session?.beneficiary_name?.split(' ')[0]}!</p>
             
-            <div className="bg-green-50 rounded-lg p-6 mb-6">
-              <div className="grid grid-cols-3 gap-4">
+            <div className="bg-green-50 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <div>
-                  <div className="text-3xl font-bold text-green-600">{session?.answered_questions}</div>
-                  <div className="text-sm text-gray-600">Answered</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{session?.answered_questions}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Answered</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-green-600">100%</div>
-                  <div className="text-sm text-gray-600">Complete</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600">100%</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Complete</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-green-600">{formatTimeDetailed(totalRecordingTime)}</div>
-                  <div className="text-sm text-gray-600">Recorded</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{formatTimeDetailed(totalRecordingTime)}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Recorded</div>
                 </div>
               </div>
             </div>
@@ -2002,22 +2006,22 @@ const AIVoiceInterviewPage: React.FC = () => {
       
       case 'paused':
         return (
-          <div className="max-w-md mx-auto py-8 px-4 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 bg-yellow-100 rounded-full flex items-center justify-center">
-              <Pause className="w-10 h-10 text-yellow-600" />
+          <div className="max-w-md mx-auto py-4 sm:py-8 px-4 text-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-yellow-100 rounded-full flex items-center justify-center">
+              <Pause className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Interview Paused</h2>
-            <p className="text-gray-600 mb-6">Your progress has been saved.</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Interview Paused</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Your progress has been saved.</p>
             
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="flex justify-between mb-2">
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+              <div className="flex justify-between mb-2 text-sm sm:text-base">
                 <span>Progress:</span>
                 <span className="font-bold">{session?.answered_questions}/{session?.total_questions}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
                 <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${session?.progress_percentage || 0}%` }} />
               </div>
-              <div className="flex justify-between text-sm text-gray-500">
+              <div className="flex justify-between text-xs sm:text-sm text-gray-500">
                 <span>Total Recording:</span>
                 <span className="font-mono">{formatTimeDetailed(totalRecordingTime)}</span>
               </div>
@@ -2025,13 +2029,13 @@ const AIVoiceInterviewPage: React.FC = () => {
             
             <button 
               onClick={resumeInterview} 
-              className="w-full py-4 bg-green-600 text-white rounded-xl text-lg font-semibold flex items-center justify-center hover:bg-green-700 transition-all"
+              className="w-full py-3 sm:py-4 bg-green-600 text-white rounded-xl text-base sm:text-lg font-semibold flex items-center justify-center hover:bg-green-700 transition-all"
             >
-              <Play className="w-6 h-6 mr-2" />
+              <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
               Resume Interview
             </button>
             
-            <p className="text-xs text-gray-500 mt-3">Recording will auto-start when you resume</p>
+            <p className="text-xs text-gray-500 mt-2 sm:mt-3">Recording will auto-start when you resume</p>
           </div>
         );
       
@@ -2043,18 +2047,18 @@ const AIVoiceInterviewPage: React.FC = () => {
   const renderActiveInterview = () => (
     <div className="flex flex-col h-screen max-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex-shrink-0">
+      <div className="bg-white border-b px-3 sm:px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center min-w-0">
             <button 
               onClick={() => navigate('/')}
-              className="p-2 hover:bg-gray-100 rounded-lg mr-2"
+              className="p-2 hover:bg-gray-100 rounded-lg mr-2 flex-shrink-0"
               title="Go Back"
             >
               <ArrowLeft className="w-5 h-5 text-gray-500" />
             </button>
-            <MessageCircle className="w-5 h-5 text-blue-500 mr-2" />
-            <span className="font-semibold truncate max-w-[100px] text-sm">{session?.project_name}</span>
+            <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mr-2 flex-shrink-0" />
+            <span className="font-semibold truncate text-sm sm:text-base">{session?.project_name}</span>
           </div>
           
           {interviewMode === 'video' && (
@@ -2068,12 +2072,12 @@ const AIVoiceInterviewPage: React.FC = () => {
           )}
           
           {interviewMode === 'audio' && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
-              <Clock className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-mono text-gray-600">{formatTimeDetailed(totalRecordingTime)}</span>
+            <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-gray-100 rounded-lg flex-shrink-0">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
+              <span className="text-xs sm:text-sm font-mono text-gray-600">{formatTimeDetailed(totalRecordingTime)}</span>
               {isRecording && (
                 <span className="flex items-center gap-1 text-red-500">
-                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse" />
                   <span className="text-xs font-bold">{formatTime(recordingTime)}</span>
                 </span>
               )}
@@ -2081,25 +2085,25 @@ const AIVoiceInterviewPage: React.FC = () => {
           )}
           
           <div className="flex items-center space-x-1">
-            <button onClick={() => setIsMuted(!isMuted)} className="p-2 rounded-full hover:bg-gray-100">
-              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            <button onClick={() => setIsMuted(!isMuted)} className="p-1.5 sm:p-2 rounded-full hover:bg-gray-100">
+              {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
-            <button onClick={() => setShowSettings(true)} className="p-2 rounded-full hover:bg-gray-100">
-              <Settings className="w-5 h-5" />
+            <button onClick={() => setShowSettings(true)} className="p-1.5 sm:p-2 rounded-full hover:bg-gray-100">
+              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button 
               onClick={handleLeaveClick} 
-              className="px-3 py-1.5 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 flex items-center gap-1"
+              className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 flex items-center gap-1"
             >
-              <LogOut className="w-4 h-4" />
-              Leave
+              <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Leave</span>
             </button>
           </div>
         </div>
         
         <div className="mt-2">
           <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>{session?.current_section_name || 'Interview'}</span>
+            <span className="truncate">{session?.current_section_name || 'Interview'}</span>
             <span>{session?.answered_questions}/{session?.total_questions}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -2109,10 +2113,10 @@ const AIVoiceInterviewPage: React.FC = () => {
       </div>
       
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
         {conversation.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+            <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-3 ${
               msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white shadow-sm rounded-bl-sm'
             }`}>
               <p className="text-sm">{msg.content}</p>
@@ -2133,10 +2137,10 @@ const AIVoiceInterviewPage: React.FC = () => {
           <div className={`rounded-lg p-3 text-sm border ${
             waitingForValidAnswer ? 'bg-yellow-50 border-yellow-200' : 'bg-blue-50 border-blue-200'
           }`}>
-            <div className={`font-medium mb-1 ${waitingForValidAnswer ? 'text-yellow-800' : 'text-blue-800'}`}>
+            <div className={`font-medium mb-1 text-xs sm:text-sm ${waitingForValidAnswer ? 'text-yellow-800' : 'text-blue-800'}`}>
               {waitingForValidAnswer ? '⚠️ Please answer:' : '📋 Question:'}
             </div>
-            <div className={waitingForValidAnswer ? 'text-yellow-700' : 'text-blue-700'}>
+            <div className={`text-xs sm:text-sm ${waitingForValidAnswer ? 'text-yellow-700' : 'text-blue-700'}`}>
               {currentQuestion.question_text}
             </div>
             {currentQuestion.options?.length > 0 && (
@@ -2155,14 +2159,14 @@ const AIVoiceInterviewPage: React.FC = () => {
       </div>
       
       {error && (
-        <div className="mx-4 mb-2 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm text-center">
+        <div className="mx-3 sm:mx-4 mb-2 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm text-center">
           {error}
           <button onClick={() => setError('')} className="ml-2 font-bold">×</button>
         </div>
       )}
       
       {showTextInput && (
-        <div className="mx-4 mb-2 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
+        <div className="mx-3 sm:mx-4 mb-2 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
           <p className="text-yellow-800 text-xs mb-2">Type your response:</p>
           <div className="flex gap-2">
             <input
@@ -2176,7 +2180,7 @@ const AIVoiceInterviewPage: React.FC = () => {
             <button
               onClick={() => processTextResponse(textInput)}
               disabled={!textInput.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 text-sm"
+              className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 text-sm flex-shrink-0"
             >
               Send
             </button>
@@ -2191,7 +2195,7 @@ const AIVoiceInterviewPage: React.FC = () => {
       )}
       
       {/* Main controls */}
-      <div className="bg-white border-t px-4 py-4 flex-shrink-0">
+      <div className="bg-white border-t px-3 sm:px-4 py-4 flex-shrink-0">
         <TurnIndicator
           currentTurn={turnState}
           aiSpeaking={aiSpeaking}
@@ -2210,8 +2214,8 @@ const AIVoiceInterviewPage: React.FC = () => {
         
         {isRecording && interviewMode === 'audio' && (
           <div className="flex justify-center mt-3">
-            <span className="font-mono text-red-500 flex items-center">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2" />
+            <span className="font-mono text-red-500 flex items-center text-sm">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse mr-2" />
               {formatTime(recordingTime)}
             </span>
           </div>
@@ -2219,8 +2223,8 @@ const AIVoiceInterviewPage: React.FC = () => {
         
         {aiSpeaking && bargeInEnabled && (
           <div className="flex justify-center mt-3">
-            <button onClick={handleBargeIn} className="text-sm text-gray-500 hover:text-blue-600 flex items-center">
-              <SkipForward className="w-4 h-4 mr-1" /> Skip AI
+            <button onClick={handleBargeIn} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 flex items-center">
+              <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Skip AI
             </button>
           </div>
         )}
@@ -2238,11 +2242,11 @@ const AIVoiceInterviewPage: React.FC = () => {
       
       {showSettings && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-5 max-w-sm w-full shadow-xl max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-4 sm:p-5 max-w-sm w-full shadow-xl max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Settings</h3>
+              <h3 className="text-base sm:text-lg font-semibold">Settings</h3>
               <button onClick={() => setShowSettings(false)} className="p-1 hover:bg-gray-100 rounded">
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
             
@@ -2251,15 +2255,15 @@ const AIVoiceInterviewPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <div className="text-xs text-gray-500">Mode</div>
-                    <div className="font-medium flex items-center mt-1">
+                    <div className="font-medium flex items-center mt-1 text-sm">
                       {interviewMode === 'video' ? (
                         <>
-                          <Video className="w-4 h-4 mr-1 text-blue-500" />
+                          <Video className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-blue-500" />
                           Video
                         </>
                       ) : (
                         <>
-                          <AudioLines className="w-4 h-4 mr-1 text-green-500" />
+                          <AudioLines className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
                           Audio
                         </>
                       )}
@@ -2267,28 +2271,28 @@ const AIVoiceInterviewPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Total Recorded</div>
-                    <div className="font-medium font-mono mt-1">{formatTimeDetailed(totalRecordingTime)}</div>
+                    <div className="font-medium font-mono mt-1 text-sm">{formatTimeDetailed(totalRecordingTime)}</div>
                   </div>
                 </div>
               </div>
               
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Hands-Free Mode</div>
+                  <div className="font-medium text-sm sm:text-base">Hands-Free Mode</div>
                   <div className="text-xs text-gray-500">Auto-detect speech</div>
                 </div>
                 <button
                   onClick={() => setHandsFreeMode(!handsFreeMode)}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${handsFreeMode ? 'bg-purple-600' : 'bg-gray-300'}`}
+                  className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors relative ${handsFreeMode ? 'bg-purple-600' : 'bg-gray-300'}`}
                 >
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${handsFreeMode ? 'translate-x-6' : ''}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full transition-transform ${handsFreeMode ? 'translate-x-5 sm:translate-x-6' : ''}`} />
                 </button>
               </div>
               
               {handsFreeMode && (
                 <>
                   <div>
-                    <div className="font-medium mb-1">Voice Threshold: {voiceDetectionThreshold}</div>
+                    <div className="font-medium mb-1 text-sm sm:text-base">Voice Threshold: {voiceDetectionThreshold}</div>
                     <input
                       type="range"
                       min="1"
@@ -2304,7 +2308,7 @@ const AIVoiceInterviewPage: React.FC = () => {
                   </div>
                   
                   <div>
-                    <div className="font-medium mb-1">Silence Duration: {silenceDuration/1000}s</div>
+                    <div className="font-medium mb-1 text-sm sm:text-base">Silence Duration: {silenceDuration/1000}s</div>
                     <input
                       type="range"
                       min="1000"
@@ -2324,33 +2328,33 @@ const AIVoiceInterviewPage: React.FC = () => {
               
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Allow Skip AI</div>
+                  <div className="font-medium text-sm sm:text-base">Allow Skip AI</div>
                   <div className="text-xs text-gray-500">Interrupt AI speaking</div>
                 </div>
                 <button
                   onClick={() => setBargeInEnabled(!bargeInEnabled)}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${bargeInEnabled ? 'bg-blue-600' : 'bg-gray-300'}`}
+                  className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors relative ${bargeInEnabled ? 'bg-blue-600' : 'bg-gray-300'}`}
                 >
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${bargeInEnabled ? 'translate-x-6' : ''}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full transition-transform ${bargeInEnabled ? 'translate-x-5 sm:translate-x-6' : ''}`} />
                 </button>
               </div>
               
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Mute AI Voice</div>
+                  <div className="font-medium text-sm sm:text-base">Mute AI Voice</div>
                 </div>
                 <button
                   onClick={() => setIsMuted(!isMuted)}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${isMuted ? 'bg-red-500' : 'bg-gray-300'}`}
+                  className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors relative ${isMuted ? 'bg-red-500' : 'bg-gray-300'}`}
                 >
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${isMuted ? 'translate-x-6' : ''}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full transition-transform ${isMuted ? 'translate-x-5 sm:translate-x-6' : ''}`} />
                 </button>
               </div>
             </div>
             
             <button
               onClick={() => setShowSettings(false)}
-              className="w-full mt-5 py-2 bg-blue-600 text-white rounded-lg"
+              className="w-full mt-4 sm:mt-5 py-2 bg-blue-600 text-white rounded-lg text-sm sm:text-base"
             >
               Done
             </button>

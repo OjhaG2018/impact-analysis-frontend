@@ -203,23 +203,24 @@ export const ResourcesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Field Resources</h1>
           <p className="text-gray-500 mt-1">Manage interviewers and field staff</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setView('assignments')}>
-            Assignments
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setView('assignments')} className="flex-shrink-0">
+            <span className="hidden sm:inline">Assignments</span>
+            <span className="sm:hidden">Assign</span>
           </Button>
-          <Button variant="outline" onClick={() => setView('attendance')}>
-            <Clock className="w-4 h-4" /> Attendance
+          <Button variant="outline" onClick={() => setView('attendance')} className="flex-shrink-0">
+            <Clock className="w-4 h-4" /> <span className="hidden sm:inline">Attendance</span>
           </Button>
-          <Button variant="outline" onClick={() => setView('expenses')}>
-            <DollarSign className="w-4 h-4" /> Expenses
+          <Button variant="outline" onClick={() => setView('expenses')} className="flex-shrink-0">
+            <DollarSign className="w-4 h-4" /> <span className="hidden sm:inline">Expenses</span>
           </Button>
-          <Button onClick={() => setShowModal(true)}>
-            <Plus className="w-4 h-4" /> Add Resource
+          <Button onClick={() => setShowModal(true)} className="flex-shrink-0">
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Resource</span>
           </Button>
         </div>
       </div>
@@ -239,7 +240,7 @@ export const ResourcesPage: React.FC = () => {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <Card className="p-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -277,8 +278,8 @@ export const ResourcesPage: React.FC = () => {
 
       {/* Search & Filters */}
       <Card className="p-4">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex-1 min-w-[250px]">
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+          <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -290,14 +291,14 @@ export const ResourcesPage: React.FC = () => {
               />
             </div>
           </div>
-          <Button variant="secondary" onClick={loadResources}>
-            <RefreshCw className="w-4 h-4" /> Refresh
+          <Button variant="secondary" onClick={loadResources} className="flex-shrink-0">
+            <RefreshCw className="w-4 h-4" /> <span className="hidden sm:inline">Refresh</span>
           </Button>
         </div>
       </Card>
 
       {/* Resources Table */}
-      <Card>
+      <Card className="p-2 sm:p-4 overflow-x-auto">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <LoadingSpinner size="lg" />
@@ -317,51 +318,56 @@ export const ResourcesPage: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Phone</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Location</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Languages</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Experience (yrs)</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-sm font-semibold text-gray-600">Name</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-sm font-semibold text-gray-600 hidden sm:table-cell">Phone</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-sm font-semibold text-gray-600 hidden lg:table-cell">Location</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-sm font-semibold text-gray-600 hidden lg:table-cell">Languages</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-sm font-semibold text-gray-600 hidden md:table-cell">Experience</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredResources.map((resource) => (
                   <tr key={resource.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                          <span className="text-emerald-700 font-semibold">
+                    <td className="px-2 sm:px-4 py-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-emerald-700 font-semibold text-xs sm:text-sm">
                             {getInitials(resource)}
                           </span>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <button
                             onClick={() => navigate(`/resources/${resource.id}`)}
-                            className="font-medium text-gray-900 hover:text-indigo-600"
+                            className="font-medium text-gray-900 hover:text-indigo-600 text-sm sm:text-base truncate block"
                           >
                             {getFullName(resource)}
                           </button>
-                          <p className="text-sm text-gray-500">{resource.email}</p>
+                          <p className="text-xs sm:text-sm text-gray-500 truncate">{resource.email}</p>
+                          <div className="sm:hidden text-xs text-gray-500 mt-1">
+                            {resource.phone && <div>{resource.phone}</div>}
+                            {resource.city && <div>{resource.city}{resource.state ? `, ${resource.state}` : ''}</div>}
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-gray-600">{resource.phone || '-'}</td>
-                    <td className="px-4 py-4 text-gray-600">
+                    <td className="px-2 sm:px-4 py-4 text-gray-600 text-sm hidden sm:table-cell">{resource.phone || '-'}</td>
+                    <td className="px-2 sm:px-4 py-4 text-gray-600 text-sm hidden lg:table-cell">
                       {resource.city ? `${resource.city}${resource.state ? `, ${resource.state}` : ''}` : '-'}
                     </td>
-                    <td className="px-4 py-4 text-gray-600">{resource.languages_known || '-'}</td>
-                    <td className="px-4 py-4">
+                    <td className="px-2 sm:px-4 py-4 text-gray-600 text-sm hidden lg:table-cell">{resource.languages_known || '-'}</td>
+                    <td className="px-2 sm:px-4 py-4">
                       <Badge variant={resource.is_available ? 'success' : 'warning'}>
-                        {resource.is_available ? 'Available' : 'Occupied'}
+                        <span className="hidden sm:inline text-xs">{resource.is_available ? 'Available' : 'Occupied'}</span>
+                        <span className="sm:hidden text-xs">{resource.is_available ? 'Avail' : 'Busy'}</span>
                       </Badge>
                     </td>
-                    <td className="px-4 py-4 text-gray-600">{resource.experience_years || 0}</td>
-                    <td className="px-4 py-4">
+                    <td className="px-2 sm:px-4 py-4 text-gray-600 text-sm hidden md:table-cell">{resource.experience_years || 0} yrs</td>
+                    <td className="px-2 sm:px-4 py-4">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => navigate(`/resources/${resource.id}`)}
@@ -403,7 +409,7 @@ export const ResourcesPage: React.FC = () => {
             </div>
           )}
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input 
               label="First Name" 
               name="first_name"
@@ -420,7 +426,7 @@ export const ResourcesPage: React.FC = () => {
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input 
               label="Username" 
               name="username"
@@ -439,7 +445,7 @@ export const ResourcesPage: React.FC = () => {
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input 
               label="Password" 
               name="password"
@@ -460,18 +466,16 @@ export const ResourcesPage: React.FC = () => {
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="Phone" 
-              name="phone"
-              type="tel" 
-              value={formData.phone}
-              onChange={handleInputChange}
-              placeholder="+91-9876543210"
-            />
-          </div>
+          <Input 
+            label="Phone" 
+            name="phone"
+            type="tel" 
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="+91-9876543210"
+          />
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input 
               label="City" 
               name="city"
@@ -494,7 +498,7 @@ export const ResourcesPage: React.FC = () => {
             placeholder="Hindi, English, Marathi" 
           />
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input 
               label="Experience (years)" 
               name="experience_years"
@@ -539,16 +543,17 @@ export const ResourcesPage: React.FC = () => {
             </label>
           </div>
           
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
             <Button 
               variant="secondary" 
               type="button" 
               onClick={() => setShowModal(false)}
               disabled={submitting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
               {submitting ? 'Adding...' : 'Add Resource'}
             </Button>
           </div>
@@ -574,13 +579,13 @@ export const ResourcesPage: React.FC = () => {
             </p>
           )}
 
-          <div className="flex gap-3 pt-4 border-t">
-            <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+            <Button variant="secondary" onClick={() => setDeleteConfirm(null)} className="w-full sm:w-auto">
               Cancel
             </Button>
             <Button 
               onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
             >
               Delete Resource
             </Button>

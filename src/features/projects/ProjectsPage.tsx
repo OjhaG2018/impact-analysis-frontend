@@ -373,30 +373,30 @@ const ProjectsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
           <p className="text-gray-500 mt-1">Manage impact assessment projects</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setView('clients')}>
-            <Building2 className="w-4 h-4" /> Clients
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setView('clients')} className="flex-shrink-0">
+            <Building2 className="w-4 h-4" /> <span className="hidden sm:inline">Clients</span>
           </Button>
-          <Button variant="outline" onClick={() => setView('beneficiaries')}>
-            <Users className="w-4 h-4" /> Beneficiaries
+          <Button variant="outline" onClick={() => setView('beneficiaries')} className="flex-shrink-0">
+            <Users className="w-4 h-4" /> <span className="hidden sm:inline">Beneficiaries</span>
           </Button>
           <Button onClick={() => {
             resetForm();
             setShowCreateModal(true);
-          }}>
-            <Plus className="w-4 h-4" /> New Project
+          }} className="flex-shrink-0">
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New Project</span>
           </Button>
         </div>
       </div>
 
       {/* Search and Filters */}
       <Card className="p-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -407,42 +407,44 @@ const ProjectsPage: React.FC = () => {
             />
           </div>
           
-          <Select
-            name="sector"
-            value={filters.sector}
-            onChange={handleFilterChange}
-            options={[
-              { value: '', label: 'All Sectors' },
-              ...sectorOptions
-            ]}
-            className="w-48"
-          />
-          
-          <Select
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            options={[
-              { value: '', label: 'All Statuses' },
-              ...statusOptions
-            ]}
-            className="w-48"
-          />
-          
-          {(filters.sector || filters.status || searchTerm) && (
-            <Button variant="secondary" onClick={clearFilters}>
-              Clear
+          <div className="flex flex-col sm:flex-row gap-2 lg:gap-4">
+            <Select
+              name="sector"
+              value={filters.sector}
+              onChange={handleFilterChange}
+              options={[
+                { value: '', label: 'All Sectors' },
+                ...sectorOptions
+              ]}
+              className="w-full sm:w-48"
+            />
+            
+            <Select
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              options={[
+                { value: '', label: 'All Statuses' },
+                ...statusOptions
+              ]}
+              className="w-full sm:w-48"
+            />
+            
+            {(filters.sector || filters.status || searchTerm) && (
+              <Button variant="secondary" onClick={clearFilters} className="flex-shrink-0">
+                Clear
+              </Button>
+            )}
+            
+            <Button variant="secondary" onClick={handleExport} className="flex-shrink-0">
+              <Download className="w-4 h-4" /> <span className="hidden sm:inline">Export</span>
             </Button>
-          )}
-          
-          <Button variant="secondary" onClick={handleExport}>
-            <Download className="w-4 h-4" /> Export
-          </Button>
+          </div>
         </div>
       </Card>
 
       {/* Projects Table */}
-      <Card className="p-4">
+      <Card className="p-2 sm:p-4 overflow-x-auto">
         <DataTable columns={columns} data={filteredProjects} loading={loading} />
       </Card>
 

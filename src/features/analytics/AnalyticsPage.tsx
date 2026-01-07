@@ -469,25 +469,27 @@ const AnalyticsPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-xl shadow-lg shadow-sky-500/20">
-                <BarChart2 className="w-6 h-6 text-white" />
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-lg sm:rounded-xl shadow-lg shadow-sky-500/20 flex-shrink-0">
+                <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">Analytics Dashboard</h1>
-                <p className="text-xs text-slate-500">Comprehensive insights & reporting</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">Analytics Dashboard</h1>
+                <p className="text-xs text-slate-500 hidden sm:block">Comprehensive insights & reporting</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {selectedProject && (
                 <>
-                  <button onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50">
-                    <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
+                  <button onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50">
+                    <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} /> 
+                    <span className="hidden sm:inline">Refresh</span>
                   </button>
-                  <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-600 hover:to-cyan-600 shadow-lg shadow-sky-500/20">
-                    <Download className="w-4 h-4" /> Export
+                  <button onClick={() => setShowExportModal(true)} className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-600 hover:to-cyan-600 shadow-lg shadow-sky-500/20">
+                    <Download className="w-3 h-3 sm:w-4 sm:h-4" /> 
+                    <span className="hidden sm:inline">Export</span>
                   </button>
                 </>
               )}
@@ -496,26 +498,46 @@ const AnalyticsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
         {/* Project Selector */}
-        <div className="mb-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
+        <div className="mb-4 sm:mb-6">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-4">
+            <div className="flex flex-col gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Select Project</label>
                 <div className="relative">
-                  <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500" onChange={handleProjectChange} value={selectedProject?.id || ''}>
+                  <select 
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl text-slate-900 font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm sm:text-base min-w-0" 
+                    onChange={handleProjectChange} 
+                    value={selectedProject?.id || ''}
+                  >
                     <option value="">Choose a project...</option>
-                    {projects.map(p => <option key={p.id} value={p.id}>{(p as any).code || p.id} - {(p as any).title || (p as any).name || 'Project'}</option>)}
+                    {projects.map(p => (
+                      <option key={p.id} value={p.id} title={`${(p as any).code || p.id} - ${(p as any).title || (p as any).name || 'Project'}`}>
+                        {((p as any).code || p.id)} - {((p as any).title || (p as any).name || 'Project').length > 30 ? `${((p as any).title || (p as any).name || 'Project').substring(0, 30)}...` : ((p as any).title || (p as any).name || 'Project')}
+                      </option>
+                    ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                  <ChevronDown className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none" />
                 </div>
               </div>
               {selectedProject && analytics?.project_info && (
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-slate-600">Status:</span><span className="font-semibold text-slate-900">{analytics.project_info.status}</span></div>
-                  <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-slate-400" /><span className="text-slate-600">Sector:</span><span className="font-semibold text-slate-900">{analytics.project_info.sector}</span></div>
-                  <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-slate-400" /><span className="text-slate-600">Client:</span><span className="font-semibold text-slate-900">{analytics.project_info.client}</span></div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-xs sm:text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                    <span className="text-slate-600">Status:</span>
+                    <span className="font-semibold text-slate-900 truncate">{analytics.project_info.status}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 flex-shrink-0" />
+                    <span className="text-slate-600">Sector:</span>
+                    <span className="font-semibold text-slate-900 truncate">{analytics.project_info.sector}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 flex-shrink-0" />
+                    <span className="text-slate-600">Client:</span>
+                    <span className="font-semibold text-slate-900 truncate">{analytics.project_info.client}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -524,11 +546,11 @@ const AnalyticsPage: React.FC = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-red-800 font-medium">Error Loading Analytics</p>
-              <p className="text-red-600 text-sm mt-1">{error}</p>
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-red-800 font-medium text-sm sm:text-base">Error Loading Analytics</p>
+              <p className="text-red-600 text-xs sm:text-sm mt-1">{error}</p>
               <p className="text-red-500 text-xs mt-2">
                 Tip: Make sure the analytics backend is configured. Check browser console (F12) for details.
               </p>
@@ -538,13 +560,23 @@ const AnalyticsPage: React.FC = () => {
 
         {/* Tabs */}
         {selectedProject && (
-          <div className="mb-6 overflow-x-auto">
-            <div className="flex items-center gap-1 p-1 bg-white rounded-xl shadow-sm border border-slate-200 inline-flex min-w-full md:min-w-0">
+          <div className="mb-4 sm:mb-6 overflow-x-auto">
+            <div className="flex items-center gap-1 p-1 bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 inline-flex min-w-full">
               {tabs.map(tab => {
                 const Icon = tab.icon;
                 return (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-600 hover:bg-slate-100'}`}>
-                    <Icon className="w-4 h-4" /> {tab.label}
+                  <button 
+                    key={tab.id} 
+                    onClick={() => setActiveTab(tab.id)} 
+                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                      activeTab === tab.id 
+                        ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg shadow-sky-500/20' 
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Icon className="w-3 h-3 sm:w-4 sm:h-4" /> 
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                   </button>
                 );
               })}
@@ -578,19 +610,23 @@ const AnalyticsPage: React.FC = () => {
             {/* OVERVIEW TAB */}
             {activeTab === 'overview' && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {/* Total Beneficiaries */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-all group">
+                  <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 hover:shadow-md transition-all group">
                     <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-sm text-slate-500 font-medium">Total Beneficiaries</p>
-                        <p className="text-3xl font-bold text-slate-900 mt-1">{(analytics.sampling_progress?.total_beneficiaries ?? 0).toLocaleString()}</p>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm text-slate-500 font-medium">Total Beneficiaries</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">{(analytics.sampling_progress?.total_beneficiaries ?? 0).toLocaleString()}</p>
                         <p className="text-xs text-slate-400 mt-1">Target: {(analytics.sampling_progress?.sample_target ?? 0).toLocaleString()}</p>
                       </div>
-                      <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform"><Users className="w-6 h-6 text-white" /></div>
+                      <div className="p-2 sm:p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg sm:rounded-xl shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform flex-shrink-0">
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
                     </div>
-                    <div className="mt-4">
-                      <div className="w-full bg-slate-200 rounded-full h-2"><div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full transition-all" style={{ width: `${Math.min(100, ((analytics.sampling_progress?.sampled ?? 0) / Math.max(1, analytics.sampling_progress?.total_beneficiaries ?? 1)) * 100)}%` }} /></div>
+                    <div className="mt-3 sm:mt-4">
+                      <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
+                        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-1.5 sm:h-2 rounded-full transition-all" style={{ width: `${Math.min(100, ((analytics.sampling_progress?.sampled ?? 0) / Math.max(1, analytics.sampling_progress?.total_beneficiaries ?? 1)) * 100)}%` }} />
+                      </div>
                       <p className="text-xs text-slate-500 mt-1">{analytics.sampling_progress?.sampled ?? 0} sampled</p>
                     </div>
                   </div>

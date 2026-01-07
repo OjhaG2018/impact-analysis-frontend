@@ -434,34 +434,38 @@ const AudioAnalysisPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-6">
       {/* Header */}
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center">
-          <Mic className="w-8 h-8 text-purple-500 mr-3" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Audio Analysis</h1>
-            <p className="text-gray-600 mt-1">
-              Upload and analyze audio recordings
-              <span className="ml-2 text-purple-600 text-sm font-medium">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center min-w-0">
+          <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 mr-2 sm:mr-3 flex-shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Audio Analysis</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
+              <span className="hidden sm:inline">Upload and analyze audio recordings</span>
+              <span className="sm:hidden">Analyze audio recordings</span>
+              <span className="block sm:inline sm:ml-2 text-purple-600 text-xs sm:text-sm font-medium">
                 ✨ OpenAI Whisper + GPT-4 Summary
               </span>
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => navigate('/video-analysis')} variant="secondary">
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => navigate('/video-analysis')} variant="secondary" className="flex-shrink-0">
             <Eye className="w-4 h-4 mr-2" />
-            Video Analysis
+            <span className="hidden sm:inline">Video Analysis</span>
+            <span className="sm:hidden">Videos</span>
           </Button>
-          <Button onClick={() => setShowUploadModal(true)}>
+          <Button onClick={() => setShowUploadModal(true)} className="flex-shrink-0">
             <Upload className="w-4 h-4 mr-2" />
-            Upload Audio
+            <span className="hidden sm:inline">Upload Audio</span>
+            <span className="sm:hidden">Upload</span>
           </Button>
           {stats.pending > 0 && (
-            <Button onClick={triggerBulkAnalysis} variant="secondary">
+            <Button onClick={triggerBulkAnalysis} variant="secondary" className="flex-shrink-0">
               <Zap className="w-4 h-4 mr-2" />
-              Analyze All ({stats.pending})
+              <span className="hidden sm:inline">Analyze All ({stats.pending})</span>
+              <span className="sm:hidden">All ({stats.pending})</span>
             </Button>
           )}
         </div>
@@ -469,77 +473,78 @@ const AudioAnalysisPage: React.FC = () => {
 
       {/* Alerts */}
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center justify-between">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">×</button>
+        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start justify-between gap-2">
+          <span className="text-sm sm:text-base">{error}</span>
+          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 text-lg leading-none flex-shrink-0">×</button>
         </div>
       )}
       {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center justify-between">
-          <span>{success}</span>
-          <button onClick={() => setSuccess(null)} className="text-green-500 hover:text-green-700">×</button>
+        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-start justify-between gap-2">
+          <span className="text-sm sm:text-base">{success}</span>
+          <button onClick={() => setSuccess(null)} className="text-green-500 hover:text-green-700 text-lg leading-none flex-shrink-0">×</button>
         </div>
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'all' && !filter.needsReview ? 'ring-2 ring-purple-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'all' && !filter.needsReview ? 'ring-2 ring-purple-500' : ''}`}
           onClick={() => setFilter({ status: 'all', needsReview: false })}
         >
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-500">Total Audio Files</div>
+          <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.total}</div>
+          <div className="text-xs sm:text-sm text-gray-500">Total Audio Files</div>
         </Card>
         <Card
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'completed' ? 'ring-2 ring-green-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'completed' ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => setFilter({ status: 'completed', needsReview: false })}
         >
-          <div className="text-2xl font-bold text-green-600">{stats.analyzed}</div>
-          <div className="text-sm text-gray-500">Analyzed</div>
+          <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.analyzed}</div>
+          <div className="text-xs sm:text-sm text-gray-500">Analyzed</div>
         </Card>
         <Card
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filter.status === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
           onClick={() => setFilter({ status: 'pending', needsReview: false })}
         >
-          <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-          <div className="text-sm text-gray-500">Pending</div>
+          <div className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.pending}</div>
+          <div className="text-xs sm:text-sm text-gray-500">Pending</div>
         </Card>
         <Card
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filter.needsReview ? 'ring-2 ring-red-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filter.needsReview ? 'ring-2 ring-red-500' : ''}`}
           onClick={() => setFilter({ status: 'all', needsReview: true })}
         >
-          <div className="text-2xl font-bold text-red-600">{stats.needsReview}</div>
-          <div className="text-sm text-gray-500">Needs Review</div>
+          <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.needsReview}</div>
+          <div className="text-xs sm:text-sm text-gray-500">Needs Review</div>
         </Card>
       </div>
 
       {/* Quick Upload Drop Zone */}
-      <Card className="p-0 overflow-hidden mb-6">
+      <Card className="p-0 overflow-hidden mb-4 sm:mb-6">
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onClick={() => setShowUploadModal(true)}
-          className="border-2 border-dashed border-gray-300 hover:border-purple-400 hover:bg-purple-50 rounded-xl p-8 text-center cursor-pointer transition-all duration-200 m-4"
+          className="border-2 border-dashed border-gray-300 hover:border-purple-400 hover:bg-purple-50 rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all duration-200 m-3 sm:m-4"
         >
-          <FileAudio className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-          <p className="text-lg font-medium text-gray-700 mb-1">
-            Drop audio files here or click to upload
+          <FileAudio className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2 sm:mb-3" />
+          <p className="text-base sm:text-lg font-medium text-gray-700 mb-1">
+            <span className="hidden sm:inline">Drop audio files here or click to upload</span>
+            <span className="sm:hidden">Tap to upload audio files</span>
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500">
             Supports MP3, WAV, M4A, OGG, FLAC, AAC
           </p>
         </div>
       </Card>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div>
+      <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+          <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={filter.status}
               onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className="border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -548,22 +553,25 @@ const AudioAnalysisPage: React.FC = () => {
               <option value="failed">Failed</option>
             </select>
           </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="needsReview"
-              checked={filter.needsReview}
-              onChange={(e) => setFilter({ ...filter, needsReview: e.target.checked })}
-              className="rounded border-gray-300 text-purple-600 mr-2"
-            />
-            <label htmlFor="needsReview" className="text-sm text-gray-600">
-              Show only needs review
-            </label>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="needsReview"
+                checked={filter.needsReview}
+                onChange={(e) => setFilter({ ...filter, needsReview: e.target.checked })}
+                className="rounded border-gray-300 text-purple-600 mr-2"
+              />
+              <label htmlFor="needsReview" className="text-sm text-gray-600">
+                <span className="hidden sm:inline">Show only needs review</span>
+                <span className="sm:hidden">Needs review</span>
+              </label>
+            </div>
+            <Button onClick={fetchAudioFiles} variant="secondary" className="flex-shrink-0">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
           </div>
-          <Button onClick={fetchAudioFiles} variant="secondary">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
         </div>
       </Card>
 
@@ -581,7 +589,7 @@ const AudioAnalysisPage: React.FC = () => {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {audioFiles.map(audio => {
             const analysis = audio.analyses && audio.analyses.length > 0 ? audio.analyses[0] : null;
             
@@ -592,14 +600,14 @@ const AudioAnalysisPage: React.FC = () => {
                 onClick={() => setSelectedAudio(audio)}
               >
                 {/* Audio Info Header */}
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50">
+                <div className="p-3 sm:p-4 bg-gradient-to-r from-purple-50 to-indigo-50">
                   <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center">
-                      <div className="p-2 bg-purple-100 rounded-lg mr-3">
-                        <FileAudio className="w-6 h-6 text-purple-600" />
+                    <div className="flex items-center min-w-0">
+                      <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg mr-2 sm:mr-3 flex-shrink-0">
+                        <FileAudio className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                       </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900 line-clamp-1">
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-gray-900 line-clamp-1 text-sm sm:text-base">
                           {audio.title || `Audio ${audio.id}`}
                         </h3>
                         <p className="text-xs text-gray-500">
@@ -616,31 +624,31 @@ const AudioAnalysisPage: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <button
                       onClick={(e) => togglePlayback(audio, e)}
-                      className={`p-2 rounded-full transition ${
+                      className={`p-1.5 sm:p-2 rounded-full transition ${
                         isPlaying === audio.id
                           ? 'bg-purple-600 text-white'
                           : 'bg-white text-purple-600 hover:bg-purple-100'
                       }`}
                     >
                       {isPlaying === audio.id ? (
-                        <Pause className="w-5 h-5" />
+                        <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
                       ) : (
-                        <Play className="w-5 h-5" />
+                        <Play className="w-4 h-4 sm:w-5 sm:h-5" />
                       )}
                     </button>
                     
                     <button
                       onClick={(e) => confirmDelete(audio, e)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                      className="p-1 sm:p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
 
                 {/* Analysis Summary */}
-                <div className="p-4">
-                  <p className="text-sm text-gray-500 mb-2">
+                <div className="p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-2">
                     {audio.beneficiary_name || 'Standalone'} • {audio.project_title || 'No Project'}
                   </p>
                   
@@ -690,7 +698,7 @@ const AudioAnalysisPage: React.FC = () => {
                   )}
                   
                   {/* Actions */}
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-1 sm:gap-2">
                     {(audio.analysis_status === 'pending' || audio.analysis_status === 'failed') && (
                       <Button
                         size="sm"
@@ -699,6 +707,7 @@ const AudioAnalysisPage: React.FC = () => {
                           triggerAnalysis(audio.id);
                         }}
                         disabled={isAnalyzing !== null}
+                        className="text-xs"
                       >
                         {isAnalyzing === audio.id ? 'Analyzing...' : 'Analyze'}
                       </Button>
@@ -712,7 +721,7 @@ const AudioAnalysisPage: React.FC = () => {
                           e.stopPropagation();
                           viewAnalysisDetails(audio);
                         }}
-                        className="bg-purple-50 text-purple-700"
+                        className="bg-purple-50 text-purple-700 text-xs"
                       >
                         <Brain className="w-3 h-3 mr-1" />
                         Details
@@ -728,6 +737,7 @@ const AudioAnalysisPage: React.FC = () => {
                           triggerAnalysis(audio.id);
                         }}
                         disabled={isAnalyzing !== null}
+                        className="text-xs"
                       >
                         Re-analyze
                       </Button>

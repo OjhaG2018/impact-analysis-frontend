@@ -383,7 +383,7 @@ const BeneficiariesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
           <Users className="w-8 h-8 text-emerald-500 mr-3" />
           <div>
@@ -391,21 +391,22 @@ const BeneficiariesPage: React.FC = () => {
             <p className="text-sm text-gray-500">Manage beneficiary data and sampling</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setView('assignments')}>
-            View Assignments
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setView('assignments')} className="flex-shrink-0">
+            <span className="hidden sm:inline">View Assignments</span>
+            <span className="sm:hidden">Assignments</span>
           </Button>
-          <Button variant="secondary" onClick={() => setShowImportModal(true)}>
-            <Upload className="w-4 h-4 mr-2" />
-            Import
+          <Button variant="secondary" onClick={() => setShowImportModal(true)} className="flex-shrink-0">
+            <Upload className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Import</span>
           </Button>
-          <Button variant="secondary" onClick={() => setShowSampleModal(true)}>
-            <Users className="w-4 h-4 mr-2" />
-            Random Sample
+          <Button variant="secondary" onClick={() => setShowSampleModal(true)} className="flex-shrink-0">
+            <Users className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Random Sample</span>
           </Button>
-          <Button onClick={() => { setFormData(emptyBeneficiary); setShowCreateModal(true); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Beneficiary
+          <Button onClick={() => { setFormData(emptyBeneficiary); setShowCreateModal(true); }} className="flex-shrink-0">
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add Beneficiary</span>
           </Button>
         </div>
       </div>
@@ -425,7 +426,7 @@ const BeneficiariesPage: React.FC = () => {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => { setSampledFilter(''); setInterviewedFilter(''); }}>
           <div className="flex items-center justify-between">
             <div>
@@ -483,11 +484,13 @@ const BeneficiariesPage: React.FC = () => {
           <select
             value={projectFilter}
             onChange={(e) => setProjectFilter(e.target.value)}
-            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm min-w-0"
           >
             <option value="">All Projects</option>
             {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.code} - {p.title}</option>
+              <option key={p.id} value={p.id} title={`${p.code} - ${p.title}`}>
+                {p.code}
+              </option>
             ))}
           </select>
 
@@ -576,7 +579,7 @@ const BeneficiariesPage: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="px-4 py-3 text-left">
@@ -685,7 +688,7 @@ const BeneficiariesPage: React.FC = () => {
         title="Add New Beneficiary"
         size="lg"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select
             label="Project *"
             name="project"

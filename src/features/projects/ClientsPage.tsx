@@ -187,7 +187,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ onBack }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {onBack && (
             <Button variant="ghost" onClick={onBack}>
@@ -199,12 +199,12 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ onBack }) => {
             <p className="text-gray-500 mt-1">Manage client organizations</p>
           </div>
         </div>
-        <Button onClick={() => setShowModal(true)}>
-          <Plus className="w-4 h-4" /> Add Client
+        <Button onClick={() => setShowModal(true)} className="flex-shrink-0">
+          <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Client</span>
         </Button>
       </div>
 
-      <Card className="p-4">
+      <Card className="p-2 sm:p-4 overflow-x-auto">
         <DataTable columns={columns} data={clients} loading={loading} />
       </Card>
 
@@ -215,7 +215,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ onBack }) => {
         size="lg"
       >
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Organization Name *"
               value={formData.name}
@@ -240,7 +240,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ onBack }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Contact Person *"
               value={formData.contact_person}
@@ -256,7 +256,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ onBack }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Contact Phone *"
               value={formData.contact_phone}
@@ -277,7 +277,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ onBack }) => {
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
           />
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input
               label="City"
               value={formData.city}
@@ -295,9 +295,9 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ onBack }) => {
             />
           </div>
 
-          <div className="flex gap-3 pt-4 border-t">
-            <Button variant="secondary" type="button" onClick={resetForm}>Cancel</Button>
-            <Button type="submit" disabled={submitting}>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+            <Button variant="secondary" type="button" onClick={resetForm} className="w-full sm:w-auto">Cancel</Button>
+            <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
               {submitting ? 'Saving...' : editingId ? 'Update' : 'Create'} Client
             </Button>
           </div>

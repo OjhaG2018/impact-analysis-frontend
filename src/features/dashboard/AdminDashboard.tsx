@@ -205,7 +205,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Key Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard 
           title="Total Projects" 
           value={stats?.total_projects ?? 0} 
@@ -251,7 +251,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Project Status Pie Chart */}
         <Card className="p-5">
           <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -282,7 +282,7 @@ const AdminDashboard: React.FC = () => {
         </Card>
 
         {/* Analysis Status Bar Chart */}
-        <Card className="p-5 lg:col-span-2">
+        <Card className="p-5 xl:col-span-2">
           <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-gray-400" />
             Analysis Overview
@@ -313,7 +313,7 @@ const AdminDashboard: React.FC = () => {
         {/* Core Modules */}
         <div className="mb-6">
           <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Core Modules</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <FeatureCard
               title="Projects"
               description="Manage all research projects and their settings"
@@ -358,7 +358,7 @@ const AdminDashboard: React.FC = () => {
         {/* Field Operations */}
         <div className="mb-6">
           <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Field Operations</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <FeatureCard
               title="Field Resources"
               description="Manage field team members and assignments"
@@ -398,7 +398,7 @@ const AdminDashboard: React.FC = () => {
         {/* AI & Analysis */}
         <div className="mb-6">
           <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">AI & Analysis</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <FeatureCard
               title="Video Analysis"
               description="AI-powered video sentiment and emotion analysis"
@@ -453,7 +453,7 @@ const AdminDashboard: React.FC = () => {
         {/* Data & Reports */}
         <div className="mb-6">
           <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Data & Reports</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <FeatureCard
               title="Interviews"
               description="View all collected interview responses"
@@ -494,7 +494,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Status Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="p-5 border-l-4 border-l-green-500">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-50 rounded-lg">
@@ -540,12 +540,12 @@ const AdminDashboard: React.FC = () => {
 
       {/* Quick Links Footer */}
       <Card className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h3 className="font-semibold text-gray-900">Need Help?</h3>
             <p className="text-sm text-gray-600">Access documentation and support resources</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <button 
               onClick={() => navigate('/settings')}
               className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"

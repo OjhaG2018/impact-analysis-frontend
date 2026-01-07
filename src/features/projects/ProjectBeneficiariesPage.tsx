@@ -189,7 +189,7 @@ const ProjectBeneficiariesPage: React.FC<ProjectBeneficiariesPageProps> = ({ onB
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {onBack && (
             <Button variant="ghost" onClick={onBack}>
@@ -201,17 +201,17 @@ const ProjectBeneficiariesPage: React.FC<ProjectBeneficiariesPageProps> = ({ onB
             <p className="text-gray-500 mt-1">Manage beneficiaries by project</p>
           </div>
         </div>
-        <Button onClick={() => { setFormData({ ...formData, project: projectFilter }); setShowModal(true); }} disabled={!projectFilter}>
-          <Plus className="w-4 h-4" /> Add Beneficiary
+        <Button onClick={() => { setFormData({ ...formData, project: projectFilter }); setShowModal(true); }} disabled={!projectFilter} className="flex-shrink-0">
+          <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Beneficiary</span>
         </Button>
       </div>
 
       <Card className="p-4">
-        <div className="flex gap-4">
+        <div className="flex flex-col lg:flex-row gap-4">
           <select
             value={projectFilter}
             onChange={(e) => setProjectFilter(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-2 border rounded-lg w-full lg:w-auto"
           >
             <option value="">Select Project</option>
             {projects.map(p => (
@@ -221,7 +221,7 @@ const ProjectBeneficiariesPage: React.FC<ProjectBeneficiariesPageProps> = ({ onB
           <select
             value={genderFilter}
             onChange={(e) => setGenderFilter(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-2 border rounded-lg w-full lg:w-auto"
             disabled={!projectFilter}
           >
             <option value="">All Genders</option>
@@ -249,14 +249,14 @@ const ProjectBeneficiariesPage: React.FC<ProjectBeneficiariesPageProps> = ({ onB
           <p className="text-gray-500">Select a project to view beneficiaries</p>
         </Card>
       ) : (
-        <Card className="p-4">
+        <Card className="p-2 sm:p-4 overflow-x-auto">
           <DataTable columns={columns} data={filteredBeneficiaries} loading={loading} />
         </Card>
       )}
 
       <Modal isOpen={showModal} onClose={resetForm} title="Add Beneficiary" size="lg">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Beneficiary ID *"
               value={formData.beneficiary_id}
@@ -344,7 +344,7 @@ const ProjectBeneficiariesPage: React.FC<ProjectBeneficiariesPageProps> = ({ onB
               value={formData.grant_amount_received}
               onChange={(e) => setFormData({ ...formData, grant_amount_received: e.target.value })}
             />
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <Input
                 label="Grant Purpose"
                 value={formData.grant_purpose}
@@ -361,9 +361,9 @@ const ProjectBeneficiariesPage: React.FC<ProjectBeneficiariesPageProps> = ({ onB
               <label className="text-sm">BPL Status</label>
             </div>
           </div>
-          <div className="flex gap-3 pt-4 border-t">
-            <Button variant="secondary" type="button" onClick={resetForm}>Cancel</Button>
-            <Button type="submit" disabled={submitting}>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+            <Button variant="secondary" type="button" onClick={resetForm} className="w-full sm:w-auto">Cancel</Button>
+            <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
               {submitting ? 'Adding...' : 'Add Beneficiary'}
             </Button>
           </div>

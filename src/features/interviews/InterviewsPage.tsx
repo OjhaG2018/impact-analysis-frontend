@@ -298,7 +298,7 @@ const InterviewsPage: React.FC = () => {
 
   // Render functions
   const renderStats = () => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
       <Card 
         className={`p-4 bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200 ${filters.status === '' ? 'ring-2 ring-gray-400' : ''}`}
         onClick={() => handleStatCardClick(null)}
@@ -308,7 +308,7 @@ const InterviewsPage: React.FC = () => {
             <ClipboardList className="w-5 h-5 text-gray-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
             <p className="text-xs text-gray-500">Total</p>
           </div>
         </div>
@@ -323,7 +323,7 @@ const InterviewsPage: React.FC = () => {
             <Clock className="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-amber-600">{stats.byStatus.in_progress || 0}</p>
+            <p className="text-xl sm:text-2xl font-bold text-amber-600">{stats.byStatus.in_progress || 0}</p>
             <p className="text-xs text-amber-700">In Progress</p>
           </div>
         </div>
@@ -338,7 +338,7 @@ const InterviewsPage: React.FC = () => {
             <Send className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-blue-600">{stats.byStatus.submitted || 0}</p>
+            <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats.byStatus.submitted || 0}</p>
             <p className="text-xs text-blue-700">Pending Review</p>
           </div>
         </div>
@@ -353,7 +353,7 @@ const InterviewsPage: React.FC = () => {
             <CheckCircle className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-emerald-600">{stats.byStatus.approved || 0}</p>
+            <p className="text-xl sm:text-2xl font-bold text-emerald-600">{stats.byStatus.approved || 0}</p>
             <p className="text-xs text-emerald-700">Approved</p>
           </div>
         </div>
@@ -368,7 +368,7 @@ const InterviewsPage: React.FC = () => {
             <Star className="w-5 h-5 text-purple-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-purple-600">
+            <p className="text-xl sm:text-2xl font-bold text-purple-600">
               {stats.avgScore > 0 ? stats.avgScore.toFixed(1) : '-'}
             </p>
             <p className="text-xs text-purple-700">Avg. Score</p>
@@ -385,7 +385,7 @@ const InterviewsPage: React.FC = () => {
             <XCircle className="w-5 h-5 text-red-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-red-600">{stats.byStatus.rejected || 0}</p>
+            <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.byStatus.rejected || 0}</p>
             <p className="text-xs text-red-700">Rejected</p>
           </div>
         </div>
@@ -395,7 +395,7 @@ const InterviewsPage: React.FC = () => {
 
   const renderFilters = () => (
     <Card className={`p-4 mb-6 transition-all duration-300 ${showFilters ? 'block' : 'hidden'}`}>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         <Input
           placeholder="Search beneficiary, project..."
           value={filters.search}
@@ -550,16 +550,16 @@ const InterviewsPage: React.FC = () => {
         return (
           <div 
             key={column.id}
-            className="flex-shrink-0 w-80"
+            className="flex-shrink-0 w-72 sm:w-80"
             onDragOver={handleDragOver}
             onDrop={() => handleDrop(column.id)}
           >
             {/* Column Header */}
-            <div className={`rounded-t-xl p-4 ${column.bgColor} border ${column.borderColor} border-b-0`}>
+            <div className={`rounded-t-xl p-3 sm:p-4 ${column.bgColor} border ${column.borderColor} border-b-0`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className={column.color}>{column.icon}</span>
-                  <h3 className={`font-semibold ${column.color}`}>{column.title}</h3>
+                  <h3 className={`font-semibold text-sm sm:text-base ${column.color}`}>{column.title}</h3>
                 </div>
                 <span className={`
                   px-2 py-0.5 rounded-full text-xs font-medium
@@ -573,7 +573,7 @@ const InterviewsPage: React.FC = () => {
             {/* Column Body */}
             <div 
               className={`
-                min-h-[500px] rounded-b-xl p-3 border ${column.borderColor} border-t-0
+                min-h-[400px] sm:min-h-[500px] rounded-b-xl p-2 sm:p-3 border ${column.borderColor} border-t-0
                 bg-gradient-to-b from-gray-50/50 to-white
                 ${draggedInterview && draggedInterview.status !== column.id ? 'ring-2 ring-emerald-300 ring-inset' : ''}
               `}
@@ -594,30 +594,30 @@ const InterviewsPage: React.FC = () => {
   );
 
   const renderListView = () => (
-    <Card className="overflow-hidden">
+    <Card className="p-2 sm:p-4 overflow-x-auto">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[800px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-2 sm:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Beneficiary
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-2 sm:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">
                 Project
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-2 sm:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">
                 Interviewer
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-2 sm:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">
                 Date
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-2 sm:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-2 sm:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">
                 Score
               </th>
-              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="px-2 sm:px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -629,34 +629,43 @@ const InterviewsPage: React.FC = () => {
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
                 onClick={() => handleViewDetails(interview)}
               >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-emerald-600" />
+                <td className="px-2 sm:px-6 py-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{interview.beneficiary_name}</p>
-                      <p className="text-sm text-gray-500">{interview.beneficiary_id}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{interview.beneficiary_name}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">{interview.beneficiary_id}</p>
+                      <div className="sm:hidden mt-1 space-y-1">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-xs font-medium text-gray-700">
+                          {interview.project_code}
+                        </span>
+                        <div className="text-xs text-gray-500">
+                          {new Date(interview.interview_date).toLocaleDateString()}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-2 sm:px-6 py-4 hidden sm:table-cell">
                   <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-sm font-medium text-gray-700">
                     {interview.project_code}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-700">
+                <td className="px-2 sm:px-6 py-4 text-gray-700 hidden lg:table-cell">
                   {interview.interviewer_name || '-'}
                 </td>
-                <td className="px-6 py-4 text-gray-700">
+                <td className="px-2 sm:px-6 py-4 text-gray-700 hidden md:table-cell">
                   {new Date(interview.interview_date).toLocaleDateString()}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-2 sm:px-6 py-4">
                   <Badge variant={STATUS_CONFIG[interview.status].variant}>
-                    {STATUS_CONFIG[interview.status].label}
+                    <span className="hidden sm:inline">{STATUS_CONFIG[interview.status].label}</span>
+                    <span className="sm:hidden">{STATUS_CONFIG[interview.status].label.split(' ')[0]}</span>
                   </Badge>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-2 sm:px-6 py-4 hidden sm:table-cell">
                   {interview.impact_score ? (
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
@@ -666,8 +675,8 @@ const InterviewsPage: React.FC = () => {
                     <span className="text-gray-400">-</span>
                   )}
                 </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                <td className="px-2 sm:px-6 py-4 text-right">
+                  <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -680,6 +689,7 @@ const InterviewsPage: React.FC = () => {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => handleConductInterview(interview)}
+                        className="hidden sm:inline-flex"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -689,6 +699,7 @@ const InterviewsPage: React.FC = () => {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => handleReviewInterview(interview)}
+                        className="hidden sm:inline-flex"
                       >
                         <CheckCircle className="w-4 h-4" />
                       </Button>
@@ -796,18 +807,18 @@ const InterviewsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Interview Pipeline</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Interview Pipeline</h1>
           <p className="text-gray-500 mt-1">Manage and track all interview responses</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={loadData}>
-            <RefreshCw className="w-4 h-4" />
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Button variant="outline" onClick={loadData} className="flex-shrink-0">
+            <RefreshCw className="w-4 h-4" /> <span className="hidden sm:inline">Refresh</span>
           </Button>
-          <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+          <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex-shrink-0">
             <Filter className="w-4 h-4" />
-            {showFilters ? 'Hide' : 'Filters'}
+            <span className="hidden sm:inline">{showFilters ? 'Hide' : 'Filters'}</span>
           </Button>
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <button
@@ -829,9 +840,9 @@ const InterviewsPage: React.FC = () => {
               <Calendar className="w-4 h-4" />
             </button>
           </div>
-          <Button onClick={() => setShowNewInterviewModal(true)}>
+          <Button onClick={() => setShowNewInterviewModal(true)} className="flex-shrink-0">
             <Plus className="w-4 h-4" />
-            New Interview
+            <span className="hidden sm:inline">New Interview</span>
           </Button>
         </div>
       </div>

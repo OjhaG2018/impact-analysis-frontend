@@ -361,74 +361,75 @@ const AIInterviewsManagementPage: React.FC = () => {
   ];
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
-          <Bot className="w-8 h-8 text-blue-500 mr-3" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">AI Voice Interviews</h1>
-            <p className="text-sm text-gray-500">
+          <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 mr-2 sm:mr-3 flex-shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">AI Voice Interviews</h1>
+            <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
               Manage AI-powered voice interviews for beneficiaries
             </p>
           </div>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
+        <Button onClick={() => setShowCreateModal(true)} className="flex-shrink-0">
           <Plus className="w-4 h-4 mr-2" />
-          Create Sessions
+          <span className="hidden sm:inline">Create Sessions</span>
+          <span className="sm:hidden">Create</span>
         </Button>
       </div>
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 cursor-pointer hover:shadow-lg transition-all" onClick={() => setStatusFilter('')}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4 cursor-pointer hover:shadow-lg transition-all" onClick={() => setStatusFilter('')}>
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Sessions</p>
-              <p className="text-2xl font-bold">{sessions.length}</p>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-500 truncate">Total Sessions</p>
+              <p className="text-lg sm:text-2xl font-bold">{sessions.length}</p>
             </div>
-            <MessageSquare className="w-10 h-10 text-blue-500 opacity-50" />
+            <MessageSquare className="w-6 h-6 sm:w-10 sm:h-10 text-blue-500 opacity-50 flex-shrink-0" />
           </div>
         </Card>
-        <Card className="p-4 cursor-pointer hover:shadow-lg transition-all" onClick={() => setStatusFilter('in_progress')}>
+        <Card className="p-3 sm:p-4 cursor-pointer hover:shadow-lg transition-all" onClick={() => setStatusFilter('in_progress')}>
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">In Progress</p>
-              <p className="text-2xl font-bold">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-500 truncate">In Progress</p>
+              <p className="text-lg sm:text-2xl font-bold">
                 {sessions.filter(s => s.status === 'in_progress').length}
               </p>
             </div>
-            <Play className="w-10 h-10 text-blue-500 opacity-50" />
+            <Play className="w-6 h-6 sm:w-10 sm:h-10 text-blue-500 opacity-50 flex-shrink-0" />
           </div>
         </Card>
-        <Card className="p-4 cursor-pointer hover:shadow-lg transition-all" onClick={() => setStatusFilter('completed')}>
+        <Card className="p-3 sm:p-4 cursor-pointer hover:shadow-lg transition-all" onClick={() => setStatusFilter('completed')}>
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Completed</p>
-              <p className="text-2xl font-bold">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-500 truncate">Completed</p>
+              <p className="text-lg sm:text-2xl font-bold">
                 {sessions.filter(s => s.status === 'completed').length}
               </p>
             </div>
-            <CheckCircle className="w-10 h-10 text-green-500 opacity-50" />
+            <CheckCircle className="w-6 h-6 sm:w-10 sm:h-10 text-green-500 opacity-50 flex-shrink-0" />
           </div>
         </Card>
-        <Card className="p-4 cursor-pointer hover:shadow-lg transition-all" onClick={() => setStatusFilter('pending')}>
+        <Card className="p-3 sm:p-4 cursor-pointer hover:shadow-lg transition-all" onClick={() => setStatusFilter('pending')}>
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Pending</p>
-              <p className="text-2xl font-bold">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-500 truncate">Pending</p>
+              <p className="text-lg sm:text-2xl font-bold">
                 {sessions.filter(s => s.status === 'pending').length}
               </p>
             </div>
-            <Clock className="w-10 h-10 text-yellow-500 opacity-50" />
+            <Clock className="w-6 h-6 sm:w-10 sm:h-10 text-yellow-500 opacity-50 flex-shrink-0" />
           </div>
         </Card>
       </div>
       
       {/* Filters */}
-      <Card className="p-4">
-        <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
+      <Card className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -436,45 +437,47 @@ const AIInterviewsManagementPage: React.FC = () => {
                 placeholder="Search by beneficiary or project..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
             </div>
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="paused">Paused</option>
-            <option value="completed">Completed</option>
-            <option value="expired">Expired</option>
-          </select>
-          <select
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Projects</option>
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.code} - {p.title}</option>
-            ))}
-          </select>
-          <Button variant="secondary" onClick={loadSessions}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex gap-2 sm:gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-2 sm:px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm flex-1 sm:flex-none"
+            >
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="paused">Paused</option>
+              <option value="completed">Completed</option>
+              <option value="expired">Expired</option>
+            </select>
+            <select
+              value={projectFilter}
+              onChange={(e) => setProjectFilter(e.target.value)}
+              className="px-2 sm:px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm flex-1 sm:flex-none min-w-0"
+            >
+              <option value="">All Projects</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.code} - {p.title}</option>
+              ))}
+            </select>
+            <Button variant="secondary" onClick={loadSessions} className="flex-shrink-0">
+              <RefreshCw className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+          </div>
         </div>
       </Card>
       
       {/* Sessions Table */}
-      <Card>
+      <Card className="overflow-x-auto">
         {error && (
-          <div className="p-4 bg-red-50 border-b border-red-200 text-red-700">
+          <div className="p-3 sm:p-4 bg-red-50 border-b border-red-200 text-red-700 text-sm">
             {error}
-            <button onClick={() => setError('')} className="float-right">×</button>
+            <button onClick={() => setError('')} className="float-right text-lg leading-none">&times;</button>
           </div>
         )}
         <DataTable
@@ -563,18 +566,18 @@ const AIInterviewsManagementPage: React.FC = () => {
                           }));
                         }
                       }}
-                      className="mr-3"
+                      className="mr-3 flex-shrink-0"
                     />
-                    <div>
-                      <div className="font-medium">{ben.name}</div>
-                      <div className="text-sm text-gray-500">{ben.phone} • {ben.village || ''}</div>
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{ben.name}</div>
+                      <div className="text-sm text-gray-500 truncate">{ben.phone} • {ben.village || ''}</div>
                     </div>
                   </label>
                 ))
               )}
             </div>
             {beneficiaries.length > 0 && (
-              <div className="mt-2 flex space-x-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   onClick={() => setCreateForm(prev => ({
                     ...prev,
@@ -594,11 +597,11 @@ const AIInterviewsManagementPage: React.FC = () => {
             )}
           </div>
           
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setShowCreateModal(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleCreateSessions} disabled={creating}>
+            <Button onClick={handleCreateSessions} disabled={creating} className="w-full sm:w-auto">
               {creating ? <LoadingSpinner size="sm" /> : 'Create Sessions'}
             </Button>
           </div>
@@ -613,10 +616,10 @@ const AIInterviewsManagementPage: React.FC = () => {
       >
         {selectedSession && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Beneficiary</p>
-                <p className="font-medium">{getBeneficiaryName(selectedSession)}</p>
+                <p className="font-medium truncate">{getBeneficiaryName(selectedSession)}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Phone</p>
@@ -624,7 +627,7 @@ const AIInterviewsManagementPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Project</p>
-                <p className="font-medium">{getProjectCode(selectedSession)}</p>
+                <p className="font-medium truncate">{getProjectCode(selectedSession)}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Status</p>
@@ -642,13 +645,13 @@ const AIInterviewsManagementPage: React.FC = () => {
                 <p className="text-sm text-gray-500">Language</p>
                 <p className="font-medium">{getLanguageDisplay(selectedSession)}</p>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <p className="text-sm text-gray-500">Created</p>
                 <p className="font-medium">
                   {selectedSession.created_at ? new Date(selectedSession.created_at).toLocaleString() : '-'}
                 </p>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <p className="text-sm text-gray-500">Expires</p>
                 <p className="font-medium">
                   {selectedSession.expires_at ? new Date(selectedSession.expires_at).toLocaleString() : '-'}
@@ -658,32 +661,34 @@ const AIInterviewsManagementPage: React.FC = () => {
             
             <div className="border-t pt-4">
               <p className="text-sm text-gray-500 mb-2">Interview Link</p>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   readOnly
                   value={`${window.location.origin}/ai-interview/${selectedSession.access_token}`}
-                  className="flex-1 px-3 py-2 border rounded bg-gray-50 text-sm"
+                  className="flex-1 px-3 py-2 border rounded bg-gray-50 text-sm min-w-0"
                 />
                 <Button
                   variant="secondary"
                   onClick={() => handleCopyLink(selectedSession)}
+                  className="flex-shrink-0"
                 >
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
             </div>
             
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button variant="secondary" onClick={() => setShowDetailsModal(false)}>
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+              <Button variant="secondary" onClick={() => setShowDetailsModal(false)} className="w-full sm:w-auto">
                 Close
               </Button>
               <a
                 href={`/ai-interview/${selectedSession.access_token}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="w-full sm:w-auto"
               >
-                <Button>
+                <Button className="w-full">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Open Interview
                 </Button>

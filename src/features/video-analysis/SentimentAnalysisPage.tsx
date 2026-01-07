@@ -404,35 +404,37 @@ const SentimentAnalysisPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-6">
       {/* Header */}
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center">
-          <Brain className="w-8 h-8 text-purple-500 mr-3" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Sentiment Analysis</h1>
-            <p className="text-gray-600 mt-1">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center min-w-0">
+          <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 mr-2 sm:mr-3 flex-shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Sentiment Analysis</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1 hidden sm:block">
               Analyze emotions, polarity, and authenticity from video interviews
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button 
             onClick={() => navigate('/video-analysis')}
             variant="secondary"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 flex-shrink-0"
           >
             <Eye className="w-4 h-4" />
-            Video Analysis
+            <span className="hidden sm:inline">Video Analysis</span>
+            <span className="sm:hidden">Videos</span>
           </Button>
           {stats.pending > 0 && (
             <Button 
               onClick={triggerBulkAnalysis}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 flex-shrink-0"
               disabled={isAnalyzing !== null}
             >
               <Zap className="w-4 h-4" />
-              Analyze All ({stats.pending})
+              <span className="hidden sm:inline">Analyze All ({stats.pending})</span>
+              <span className="sm:hidden">All ({stats.pending})</span>
             </Button>
           )}
         </div>
@@ -440,100 +442,100 @@ const SentimentAnalysisPage: React.FC = () => {
 
       {/* Alerts */}
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center justify-between">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">×</button>
+        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start justify-between gap-2">
+          <span className="text-sm sm:text-base">{error}</span>
+          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 text-lg leading-none flex-shrink-0">×</button>
         </div>
       )}
       {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center justify-between">
-          <span>{success}</span>
-          <button onClick={() => setSuccess(null)} className="text-green-500 hover:text-green-700">×</button>
+        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-start justify-between gap-2">
+          <span className="text-sm sm:text-base">{success}</span>
+          <button onClick={() => setSuccess(null)} className="text-green-500 hover:text-green-700 text-lg leading-none flex-shrink-0">×</button>
         </div>
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card 
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filters.status === 'all' && !filters.needs_review ? 'ring-2 ring-purple-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filters.status === 'all' && !filters.needs_review ? 'ring-2 ring-purple-500' : ''}`}
           onClick={() => { updateFilters('status', 'all'); updateFilters('needs_review', false); }}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-              <div className="text-sm text-gray-500">Total Analyses</div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.total}</div>
+              <div className="text-xs sm:text-sm text-gray-500 truncate">Total Analyses</div>
             </div>
-            <Brain className="w-8 h-8 text-purple-400 opacity-50" />
+            <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400 opacity-50 flex-shrink-0" />
           </div>
         </Card>
         
         <Card 
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filters.status === 'completed' ? 'ring-2 ring-green-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filters.status === 'completed' ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => updateFilters('status', 'completed')}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-              <div className="text-sm text-gray-500">Completed</div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.completed}</div>
+              <div className="text-xs sm:text-sm text-gray-500 truncate">Completed</div>
             </div>
-            <CheckCircle className="w-8 h-8 text-green-400 opacity-50" />
+            <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-400 opacity-50 flex-shrink-0" />
           </div>
         </Card>
         
         <Card 
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filters.status === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filters.status === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
           onClick={() => updateFilters('status', 'pending')}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-              <div className="text-sm text-gray-500">Pending</div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.pending}</div>
+              <div className="text-xs sm:text-sm text-gray-500 truncate">Pending</div>
             </div>
-            <Clock className="w-8 h-8 text-yellow-400 opacity-50" />
+            <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400 opacity-50 flex-shrink-0" />
           </div>
         </Card>
         
         <Card 
-          className={`p-4 cursor-pointer transition hover:shadow-md ${filters.needs_review ? 'ring-2 ring-red-500' : ''}`}
+          className={`p-3 sm:p-4 cursor-pointer transition hover:shadow-md ${filters.needs_review ? 'ring-2 ring-red-500' : ''}`}
           onClick={() => updateFilters('needs_review', !filters.needs_review)}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-red-600">{stats.needsReview}</div>
-              <div className="text-sm text-gray-500">Needs Review</div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.needsReview}</div>
+              <div className="text-xs sm:text-sm text-gray-500 truncate">Needs Review</div>
             </div>
-            <AlertTriangle className="w-8 h-8 text-red-400 opacity-50" />
+            <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 opacity-50 flex-shrink-0" />
           </div>
         </Card>
         
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <div className={`text-2xl font-bold ${getPolarityColor(stats.avgSentiment)}`}>
+            <div className="min-w-0">
+              <div className={`text-lg sm:text-2xl font-bold ${getPolarityColor(stats.avgSentiment)}`}>
                 {stats.avgSentiment >= 0 ? '+' : ''}{(stats.avgSentiment * 100).toFixed(0)}%
               </div>
-              <div className="text-sm text-gray-500">Avg Sentiment</div>
+              <div className="text-xs sm:text-sm text-gray-500 truncate">Avg Sentiment</div>
             </div>
             {stats.avgSentiment >= 0.1 ? (
-              <TrendingUp className="w-8 h-8 text-green-400 opacity-50" />
+              <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-400 opacity-50 flex-shrink-0" />
             ) : stats.avgSentiment <= -0.1 ? (
-              <TrendingDown className="w-8 h-8 text-red-400 opacity-50" />
+              <TrendingDown className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 opacity-50 flex-shrink-0" />
             ) : (
-              <Minus className="w-8 h-8 text-gray-400 opacity-50" />
+              <Minus className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 opacity-50 flex-shrink-0" />
             )}
           </div>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
+      <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={filters.status}
               onChange={(e) => updateFilters('status', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -548,7 +550,7 @@ const SentimentAnalysisPage: React.FC = () => {
             <select
               value={filters.polarity}
               onChange={(e) => updateFilters('polarity', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             >
               <option value="all">All Polarity</option>
               <option value="strongly_positive">Strongly Positive</option>
@@ -566,7 +568,7 @@ const SentimentAnalysisPage: React.FC = () => {
             <select
               value={filters.emotion}
               onChange={(e) => updateFilters('emotion', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             >
               <option value="all">All Emotions</option>
               <option value="joy">Joy</option>
@@ -586,32 +588,37 @@ const SentimentAnalysisPage: React.FC = () => {
             <select
               value={filters.project_id}
               onChange={(e) => updateFilters('project_id', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm min-w-0"
             >
               <option value="">All Projects</option>
               {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.code} - {p.title}</option>
+                <option key={p.id} value={p.id} title={`${p.code} - ${p.title}`}>
+                  {p.code} - {p.title.length > 20 ? `${p.title.substring(0, 20)}...` : p.title}
+                </option>
               ))}
             </select>
           </div>
           
-          <div className="flex items-center pt-6">
-            <input
-              type="checkbox"
-              id="needsReview"
-              checked={filters.needs_review}
-              onChange={(e) => updateFilters('needs_review', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-2"
-            />
-            <label htmlFor="needsReview" className="text-sm text-gray-600">
-              Needs Review Only
-            </label>
+          <div className="flex flex-col justify-end">
+            <div className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                id="needsReview"
+                checked={filters.needs_review}
+                onChange={(e) => updateFilters('needs_review', e.target.checked)}
+                className="rounded border-gray-300 text-purple-600 mr-2"
+              />
+              <label htmlFor="needsReview" className="text-sm text-gray-600">
+                <span className="hidden sm:inline">Needs Review Only</span>
+                <span className="sm:hidden">Review Only</span>
+              </label>
+            </div>
+            
+            <Button onClick={fetchAnalyses} variant="secondary" className="flex items-center gap-2 w-full sm:w-auto">
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
           </div>
-          
-          <Button onClick={fetchAnalyses} variant="secondary" className="flex items-center gap-2 mt-auto">
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </Button>
         </div>
       </Card>
 
@@ -660,7 +667,7 @@ const SentimentAnalysisPage: React.FC = () => {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {analyses.map(analysis => (
             <Card 
               key={analysis.id}
