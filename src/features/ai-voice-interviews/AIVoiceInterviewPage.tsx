@@ -122,7 +122,7 @@ type InterviewState =
 
 
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://impact.rtcknowledge.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://impactanalysis.rtcknowledge.com/api';
 // ============= Format Time Helper =============
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
