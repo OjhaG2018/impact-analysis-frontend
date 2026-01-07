@@ -118,11 +118,7 @@ type InterviewState =
   | 'expired'
   | 'stopped';
 
-// const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-
-
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://impactanalysis.rtcknowledge.com/api';
+import { api, endpoints } from '../../api';
 // ============= Format Time Helper =============
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
@@ -759,7 +755,7 @@ const AIVoiceInterviewPage: React.FC = () => {
       }
       
       try {
-        const response = await fetch(`${API_BASE_URL}/api/ai-interviews/public/${accessToken}/`);
+        const response = await fetch(`${api.getBaseUrl()}${endpoints.publicInterview(accessToken)}`);
         
         if (!response.ok) {
           if (response.status === 410) {
@@ -1306,7 +1302,7 @@ const AIVoiceInterviewPage: React.FC = () => {
     
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/ai-interviews/public/${accessToken}/start/`,
+        `${api.getBaseUrl()}${endpoints.startInterview(accessToken)}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1384,7 +1380,7 @@ const AIVoiceInterviewPage: React.FC = () => {
       }
       
       const response = await fetch(
-        `${API_BASE_URL}/api/ai-interviews/public/${accessToken}/process-audio/`,
+        `${api.getBaseUrl()}${endpoints.processAudio(accessToken)}`,
         { method: 'POST', body: formData }
       );
       
@@ -1525,7 +1521,7 @@ const AIVoiceInterviewPage: React.FC = () => {
     
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/ai-interviews/public/${accessToken}/process-text/`,
+        `${api.getBaseUrl()}${endpoints.processText(accessToken)}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1598,7 +1594,7 @@ const AIVoiceInterviewPage: React.FC = () => {
     stopAllRecordings();
     
     try {
-      await fetch(`${API_BASE_URL}/api/ai-interviews/public/${accessToken}/pause/`, { method: 'POST' });
+      await fetch(`${api.getBaseUrl()}${endpoints.pauseInterview(accessToken)}`, { method: 'POST' });
       setInterviewState('paused');
       setCanRecord(false);
       setShowLeaveConfirm(false);
@@ -1616,7 +1612,7 @@ const AIVoiceInterviewPage: React.FC = () => {
     stopAllRecordings();
     
     try {
-      await fetch(`${API_BASE_URL}/api/ai-interviews/public/${accessToken}/stop/`, { method: 'POST' });
+      await fetch(`${api.getBaseUrl()}${endpoints.stopInterview(accessToken)}`, { method: 'POST' });
       setInterviewState('stopped');
       setCanRecord(false);
       setShowLeaveConfirm(false);
@@ -1646,7 +1642,7 @@ const AIVoiceInterviewPage: React.FC = () => {
       }
       
       const response = await fetch(
-        `${API_BASE_URL}/api/ai-interviews/public/${accessToken}/resume/`,
+        `${api.getBaseUrl()}${endpoints.resumeInterview(accessToken)}`,
         { method: 'POST' }
       );
       const data = await response.json();
@@ -1681,7 +1677,7 @@ const AIVoiceInterviewPage: React.FC = () => {
     try {
       // Call the reset endpoint to clear the session
       const response = await fetch(
-        `${API_BASE_URL}/api/ai-interviews/public/${accessToken}/reset/`,
+        `${api.getBaseUrl()}${endpoints.resetInterview(accessToken)}`,
         { method: 'POST' }
       );
       
@@ -1695,7 +1691,7 @@ const AIVoiceInterviewPage: React.FC = () => {
         setWaitingForValidAnswer(false);
         
         // Reload session data
-        const sessionResponse = await fetch(`${API_BASE_URL}/api/ai-interviews/public/${accessToken}/`);
+        const sessionResponse = await fetch(`${api.getBaseUrl()}${endpoints.publicInterview(accessToken)}`);
         if (sessionResponse.ok) {
           const data = await sessionResponse.json();
           setSession(data);

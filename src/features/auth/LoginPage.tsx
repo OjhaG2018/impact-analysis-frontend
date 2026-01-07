@@ -39,13 +39,30 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      await api.post('/core/users/', { username, email, password });
-      const result = await login(username, password);
-      if (!result.success) {
-        setError(result.error || 'Registration successful but login failed');
-      }
+      const response = await api.post('/core/users/register/', { 
+        username, 
+        email, 
+        password,
+        confirm_password: confirmPassword
+      });
+      
+      // Show success message since user needs admin approval
+      setError('');
+      alert((response as any)?.message || 'Registration successful. Please wait for administrator approval.');
+      
+      // Switch back to login form
+      setIsLogin(true);
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      const errorMessage = err.response?.data?.detail || 
+        Object.values(err.response?.data || {}).flat().join(', ') ||
+        err.message || 
+        'Registration failed';
+      setError(errorMessage);
     }
     setLoading(false);
   };
