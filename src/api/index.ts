@@ -11,7 +11,7 @@ import {
   SectorInfo,
 } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://impactanalysis.rtcknowledge.com/api';
+ const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://impactanalysis.rtcknowledge.com';
 // const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api';
 
 class ApiService {
@@ -22,6 +22,17 @@ class ApiService {
   // Get base URL for external use
   getBaseUrl(): string {
     return API_BASE_URL;
+  }
+
+  getAuthHeaders(): HeadersInit {
+    const token = this.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
   }
 
   private getHeaders(includeAuth: boolean = true): HeadersInit {
@@ -257,6 +268,45 @@ export const endpoints = {
   videoSettings: (token: string) => `/ai-interviews/public/${token}/video-settings/`,
   videoConsent: (token: string) => `/ai-interviews/public/${token}/video-consent/`,
   uploadVideo: (token: string) => `/ai-interviews/public/${token}/upload-video/`,
+
+  // PDF Analysis endpoints  <-- ADD THIS SECTION
+  // pdfDocuments: '/pdf-analysis/documents/',
+  // pdfDocument: (id: string) => `/pdf-analysis/documents/${id}/`,
+  // pdfExtract: (id: string) => `/pdf-analysis/documents/${id}/extract/`,
+  // pdfSummarize: (id: string) => `/pdf-analysis/documents/${id}/summarize/`,
+  // pdfSummaries: (id: string) => `/pdf-analysis/documents/${id}/summaries/`,
+  // pdfTables: (id: string) => `/pdf-analysis/documents/${id}/tables/`,
+  // pdfDownloadText: (id: string) => `/pdf-analysis/documents/${id}/download_text/`,
+  // pdfStats: '/pdf-analysis/stats/',
+  // pdfBulkProcess: '/pdf-analysis/bulk-process/',
+
+  pdfDocuments: '/pdf-analysis/documents/',
+  pdfDocument: (id: string) => `/pdf-analysis/documents/${id}/`,
+  pdfExtract: (id: string) => `/pdf-analysis/documents/${id}/extract/`,
+  pdfExtractThemes: (id: string) => `/pdf-analysis/documents/${id}/extract_themes/`,
+  pdfSummarize: (id: string) => `/pdf-analysis/documents/${id}/summarize/`,
+  pdfDocumentThemes: (id: string) => `/pdf-analysis/documents/${id}/themes/`,
+  pdfSummarizeAllThemes: (id: string) => `/pdf-analysis/documents/${id}/summarize_all_themes/`,
+  pdfReextractOCR: (id: string) => `/pdf-analysis/documents/${id}/reextract_with_ocr/`,
+  
+  // Theme endpoints
+  pdfThemes: '/pdf-analysis/themes/',
+  pdfTheme: (id: string) => `/pdf-analysis/themes/${id}/`,
+  pdfThemeSummarize: (id: string) => `/pdf-analysis/themes/${id}/summarize/`,
+  pdfThemeVerify: (id: string) => `/pdf-analysis/themes/${id}/verify/`,
+  
+  // Summary endpoints
+  pdfSummaries: '/pdf-analysis/summaries/',
+  pdfSummary: (id: string) => `/pdf-analysis/summaries/${id}/`,
+  pdfSummaryFeedback: (id: string) => `/pdf-analysis/summaries/${id}/feedback/`,
+  
+  // Theme Summary endpoints
+  pdfThemeSummaries: '/pdf-analysis/theme-summaries/',
+  
+  // Utility endpoints
+  pdfStats: '/pdf-analysis/stats/',
+  pdfBulkProcess: '/pdf-analysis/bulk-process/',
+  pdfOCRStatus: '/pdf-analysis/ocr-status/',
 };
 
 

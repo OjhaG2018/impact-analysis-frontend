@@ -28,5 +28,7 @@ export * from './video-analysis';
 // Analytics
 export * from './analytics';
 
+export * from './pdf-analysis';
+
 // Settings
 export * from './settings';

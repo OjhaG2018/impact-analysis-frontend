@@ -556,14 +556,15 @@ const AIVoiceInterviewPage: React.FC = () => {
   const [bargeInEnabled, setBargeInEnabled] = useState(true);
   const [turnTransitionDelay, setTurnTransitionDelay] = useState(500);
   
-  // ============= FIXED VAD SETTINGS - MORE SENSITIVE =============
+  // ============= FIXED VAD SETTINGS - MORE SENSITIVE + VOLUME BOOST =============
   const [handsFreeMode, setHandsFreeMode] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [silenceThreshold, setSilenceThreshold] = useState(1); // LOWERED from 3 to 1
-  const [silenceDuration, setSilenceDuration] = useState(2000);
-  const [minRecordingTime, setMinRecordingTime] = useState(1000);
-  const [voiceDetectionThreshold, setVoiceDetectionThreshold] = useState(2); // LOWERED from 5 to 2
+  const [silenceDuration, setSilenceDuration] = useState(3000); // INCREASED to 3 seconds
+  const [minRecordingTime, setMinRecordingTime] = useState(2000); // INCREASED to 2 seconds
+  const [voiceDetectionThreshold, setVoiceDetectionThreshold] = useState(2); // LOWERED for better detection
+  const [microphoneGain, setMicrophoneGain] = useState(2.5); // NEW: Volume boost
   // ============= END FIXED VAD SETTINGS =============
   
   // Current question state
@@ -612,12 +613,59 @@ const AIVoiceInterviewPage: React.FC = () => {
   const recordingStartTimeRef = useRef<number>(0);
   const isRecordingRef = useRef(false);
   const isListeningRef = useRef(false);
+  const interviewStateRef = useRef<InterviewState>('loading');
   const animationFrameRef = useRef<number | null>(null);
   const hasSpokenRef = useRef(false);
   
   // Function refs to avoid closure issues
   const startRecordingInternalRef = useRef<(() => void) | null>(null);
   const stopRecordingInternalRef = useRef<(() => void) | null>(null);
+  // Add these new refs after existing refs
+  const mixedAudioDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const aiAudioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const fullInterviewRecorderRef = useRef<MediaRecorder | null>(null);
+  const fullInterviewChunksRef = useRef<Blob[]>([]);
+  const isFullInterviewRecordingRef = useRef(false);
+
+  // Auto upload function
+  const handleAutoUpload = useCallback(async () => {
+    console.log('📤 Starting automatic upload...');
+    
+    try {
+      // Stop and collect full interview recording
+      const fullInterviewBlob = await stopFullInterviewRecording();
+      
+      if (fullInterviewBlob && fullInterviewBlob.size > 1000) {
+        console.log(`📤 Uploading ${(fullInterviewBlob.size / 1024 / 1024).toFixed(2)} MB recording...`);
+        
+        const formData = new FormData();
+        const fileName = `interview_${Date.now()}.${interviewMode === 'video' ? 'webm' : 'webm'}`;
+        formData.append(interviewMode === 'video' ? 'video' : 'audio', fullInterviewBlob, fileName);
+        formData.append('recording_type', 'full_interview');
+        formData.append('duration_seconds', String(totalRecordingTime));
+        formData.append('mode', interviewMode);
+        
+        const uploadEndpoint = interviewMode === 'video' 
+          ? endpoints.uploadVideo(accessToken!)
+          : endpoints.uploadVideo(accessToken!);
+        
+        const response = await fetch(
+          `${api.getBaseUrl()}${uploadEndpoint}`,
+          { method: 'POST', body: formData }
+        );
+        
+        if (response.ok) {
+          console.log('✅ Auto-upload successful!');
+        } else {
+          console.error('❌ Auto-upload failed:', response.status);
+        }
+      } else {
+        console.log('ℹ️ No recording to upload');
+      }
+    } catch (err) {
+      console.error('❌ Auto-upload error:', err);
+    }
+  }, [accessToken, interviewMode, totalRecordingTime]);
   
   // Keep refs in sync
   useEffect(() => {
@@ -627,6 +675,11 @@ const AIVoiceInterviewPage: React.FC = () => {
   useEffect(() => {
     isListeningRef.current = isListening;
   }, [isListening]);
+  
+  useEffect(() => {
+    interviewStateRef.current = interviewState;
+    console.log('📍 Interview state changed to:', interviewState);
+  }, [interviewState]);
   
   // Helper to resume AudioContext (call on any user interaction)
   const resumeAudioContext = useCallback(async () => {
@@ -839,15 +892,15 @@ const AIVoiceInterviewPage: React.FC = () => {
       const timeRms = Math.sqrt(timeSum / bufferLength);
       const timeLevel = Math.min(100, timeRms * 500); // INCREASED from 300 to 500
       
-      // Calculate level from frequency domain - INCREASED SENSITIVITY
+      // Calculate level from frequency domain - INCREASED SENSITIVITY + VOLUME BOOST
       let freqSum = 0;
       for (let i = 0; i < bufferLength; i++) {
         freqSum += freqDataArray[i];
       }
-      const freqLevel = Math.min(100, (freqSum / bufferLength) * 2); // INCREASED from 1.5 to 2
+      const freqLevel = Math.min(100, (freqSum / bufferLength) * 3 * microphoneGain); // BOOSTED with gain
       
-      // Use the higher of the two methods
-      const normalizedLevel = Math.max(timeLevel, freqLevel);
+      // Use the higher of the two methods with gain boost
+      const normalizedLevel = Math.max(timeLevel * microphoneGain, freqLevel);
       
       // Debug logging every 60 frames
       frameCount++;
@@ -899,63 +952,73 @@ const AIVoiceInterviewPage: React.FC = () => {
     animationFrameRef.current = requestAnimationFrame(updateLevel);
   }, [voiceDetectionThreshold, silenceThreshold, silenceDuration, minRecordingTime]);
   
-  // Initialize audio (and optionally video)
+  // Initialize audio (and optionally video) - FIXED: Full interview recording
   const initializeMedia = async (mode: InterviewMode) => {
     try {
       console.log(`Initializing media for ${mode} mode...`);
       
       const audioStream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 44100,
+          echoCancellation: false,  // DISABLED for speed
+          noiseSuppression: false,  // DISABLED for speed
+          autoGainControl: false,   // DISABLED for speed
+          sampleRate: 16000,        // REDUCED for speed
+          channelCount: 1,          // MONO for speed
+          latency: 0.01,           // LOW latency
         }
       });
       
       console.log('Microphone access granted');
-      console.log('Audio tracks:', audioStream.getAudioTracks().map(t => ({ label: t.label, enabled: t.enabled, muted: t.muted })));
-      
       streamRef.current = audioStream;
       setMicPermissionGranted(true);
       
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      audioContextRef.current = new AudioContextClass();
+      audioContextRef.current = new AudioContextClass({
+        sampleRate: 16000,           // REDUCED for speed
+        latencyHint: 'interactive'   // LOW latency
+      });
       
       console.log('AudioContext state:', audioContextRef.current.state);
       setAudioContextState(audioContextRef.current.state);
       
-      audioContextRef.current.onstatechange = () => {
-        const newState = audioContextRef.current?.state || 'unknown';
-        console.log('📢 AudioContext state changed:', newState);
-        setAudioContextState(newState);
-      };
-      
       if (audioContextRef.current.state === 'suspended') {
-        console.log('Resuming suspended AudioContext...');
         await audioContextRef.current.resume();
-        console.log('AudioContext resumed, new state:', audioContextRef.current.state);
         setAudioContextState(audioContextRef.current.state);
       }
       
       const source = audioContextRef.current.createMediaStreamSource(audioStream);
       analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      analyserRef.current.smoothingTimeConstant = 0.3;
-      analyserRef.current.minDecibels = -90;
-      analyserRef.current.maxDecibels = -10;
+      analyserRef.current.fftSize = 128;              // REDUCED for speed
+      analyserRef.current.smoothingTimeConstant = 0.1; // FASTER response
       source.connect(analyserRef.current);
       
-      console.log('Analyser connected, frequencyBinCount:', analyserRef.current.frequencyBinCount);
+      // ============= CREATE MIXED AUDIO STREAM FOR FULL INTERVIEW + VOLUME BOOST =============
+      mixedAudioDestinationRef.current = audioContextRef.current.createMediaStreamDestination();
       
+      // Connect user's microphone to the mixed destination with volume boost
+      const micSource = audioContextRef.current.createMediaStreamSource(audioStream);
+      
+      // Create gain node for volume boost
+      const gainNode = audioContextRef.current.createGain();
+      gainNode.gain.value = microphoneGain; // Apply volume boost
+      
+      // Connect: mic -> gain -> destination
+      micSource.connect(gainNode);
+      gainNode.connect(mixedAudioDestinationRef.current);
+      
+      console.log(`✅ Mixed audio destination created with ${microphoneGain}x volume boost`);
+      
+      // Store gain node reference for later adjustment
+      (window as any).micGainNode = gainNode;
+      
+      // Create audio recorder for individual responses - OPTIMIZED for speed
       const audioMimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm') 
-          ? 'audio/webm' 
-          : 'audio/mp4';
+        ? 'audio/webm;codecs=opus' : 'audio/webm';
       
-      const audioRecorder = new MediaRecorder(audioStream, { mimeType: audioMimeType });
-      
+      const audioRecorder = new MediaRecorder(audioStream, { 
+        mimeType: audioMimeType,
+        audioBitsPerSecond: 32000  // REDUCED bitrate for speed
+      });
       audioRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
@@ -963,46 +1026,50 @@ const AIVoiceInterviewPage: React.FC = () => {
       };
       
       audioRecorder.onstop = async () => {
-        console.log('Audio recorder stopped, processing...');
+        console.log('🎤 Audio recorder stopped, processing...');
+        console.log('📍 Current interviewStateRef:', interviewStateRef.current);
+        
         const audioBlob = new Blob(audioChunksRef.current, { type: audioMimeType });
         audioChunksRef.current = [];
         
-        let videoBlob: Blob | null = null;
-        if (mode === 'video' && videoChunksRef.current.length > 0) {
-          videoBlob = new Blob(videoChunksRef.current, { type: 'video/webm' });
-          videoChunksRef.current = [];
-        }
+        // ⚠️ USE REF instead of state to avoid stale closure!
+        const currentState = interviewStateRef.current;
+        const validStates = ['listening', 'processing', 'speaking', 'greeting'];
         
-        if (['listening', 'processing', 'speaking'].includes(interviewState)) {
+        console.log(`📍 State check: "${currentState}" in [${validStates.join(', ')}]`);
+        console.log(`📍 Blob size: ${audioBlob.size}, hasSpoken: ${hasSpokenRef.current}`);
+        
+        if (validStates.includes(currentState)) {
           if (audioBlob.size > 1000 && hasSpokenRef.current) {
-            await processAudioResponse(audioBlob, videoBlob);
+            console.log('✅ Calling processAudioResponse...');
+            await processAudioResponse(audioBlob, null);
           } else {
-            console.log('Recording too short or no speech, restarting listening');
+            console.log('⚠️ Recording too short or no speech detected');
             setError('No speech detected. Please try again.');
             setTimeout(() => setError(''), 3000);
-            if (handsFreeMode && canRecord) {
-              setTimeout(() => startListening(), 500);
-            }
             setInterviewState('listening');
             setCanRecord(true);
             setTurnState('user');
+            if (handsFreeMode) {
+              setTimeout(() => startListening(), 500);
+            }
           }
+        } else {
+          console.log(`⚠️ Skipping process - invalid state: "${currentState}"`);
         }
       };
       
       mediaRecorderRef.current = audioRecorder;
       
+      // ============= CREATE FULL INTERVIEW RECORDER =============
+      let fullInterviewStream: MediaStream;
+      
       if (mode === 'video') {
         try {
           const videoStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              width: { ideal: 640 },
-              height: { ideal: 480 },
-              facingMode: 'user'
-            }
+            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
           });
           
-          console.log('Camera access granted');
           videoStreamRef.current = videoStream;
           setCameraPermissionGranted(true);
           
@@ -1010,38 +1077,42 @@ const AIVoiceInterviewPage: React.FC = () => {
             videoPreviewRef.current.srcObject = videoStream;
           }
           
-          const combinedStream = new MediaStream([
+          // Combined stream: video + mixed audio (user + AI)
+          fullInterviewStream = new MediaStream([
             ...videoStream.getVideoTracks(),
-            ...audioStream.getAudioTracks()
+            ...mixedAudioDestinationRef.current.stream.getAudioTracks()
           ]);
-          
-          const videoMimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-            ? 'video/webm;codecs=vp9,opus'
-            : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
-              ? 'video/webm;codecs=vp8,opus'
-              : 'video/webm';
-          
-          const videoRecorder = new MediaRecorder(combinedStream, { mimeType: videoMimeType });
-          
-          videoRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-              videoChunksRef.current.push(event.data);
-            }
-          };
-          
-          videoRecorderRef.current = videoRecorder;
           
         } catch (videoErr) {
           console.error('Camera access error:', videoErr);
           setError('Camera access denied. Continuing with audio only.');
           setInterviewMode('audio');
-          setTimeout(() => setError(''), 3000);
+          fullInterviewStream = mixedAudioDestinationRef.current.stream;
         }
+      } else {
+        // Audio only mode - just mixed audio
+        fullInterviewStream = mixedAudioDestinationRef.current.stream;
       }
       
-      startAudioLevelMonitoring();
+      // Create full interview recorder
+      const fullMimeType = mode === 'video' 
+        ? (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm')
+        : audioMimeType;
       
+      const fullInterviewRecorder = new MediaRecorder(fullInterviewStream, { mimeType: fullMimeType });
+      
+      fullInterviewRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          fullInterviewChunksRef.current.push(event.data);
+        }
+      };
+      
+      fullInterviewRecorderRef.current = fullInterviewRecorder;
+      console.log('✅ Full interview recorder created');
+      
+      startAudioLevelMonitoring();
       return true;
+      
     } catch (err: any) {
       console.error('Media access error:', err);
       setError('Microphone access denied. Please allow microphone access and refresh.');
@@ -1050,6 +1121,58 @@ const AIVoiceInterviewPage: React.FC = () => {
     }
   };
   
+
+  // Start full interview recording when interview starts
+  const startFullInterviewRecording = useCallback(() => {
+    if (!fullInterviewRecorderRef.current || isFullInterviewRecordingRef.current) {
+      console.log('⚠️ Full interview recorder not ready or already recording');
+      return;
+    }
+    
+    console.log('🎬 Starting full interview recording (AI + User audio)...');
+    fullInterviewChunksRef.current = [];
+    
+    try {
+      fullInterviewRecorderRef.current.start(1000); // Chunk every 1 second
+      isFullInterviewRecordingRef.current = true;
+      console.log('✅ Full interview recording started');
+    } catch (err) {
+      console.error('❌ Failed to start full interview recording:', err);
+    }
+  }, []);
+  
+  // Stop full interview recording and upload
+  const stopFullInterviewRecording = useCallback(async (): Promise<Blob | null> => {
+    if (!fullInterviewRecorderRef.current || !isFullInterviewRecordingRef.current) {
+      console.log('ℹ️ Full interview recorder not active');
+      return null;
+    }
+    
+    return new Promise((resolve) => {
+      console.log('🛑 Stopping full interview recording...');
+      
+      fullInterviewRecorderRef.current!.onstop = () => {
+        if (fullInterviewChunksRef.current.length > 0) {
+          const mimeType = interviewMode === 'video' ? 'video/webm' : 'audio/webm';
+          const blob = new Blob(fullInterviewChunksRef.current, { type: mimeType });
+          console.log(`📹 Full interview blob: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+          resolve(blob);
+        } else {
+          resolve(null);
+        }
+        isFullInterviewRecordingRef.current = false;
+      };
+      
+      try {
+        fullInterviewRecorderRef.current!.stop();
+      } catch (err) {
+        console.error('Error stopping full interview recorder:', err);
+        resolve(null);
+      }
+    });
+  }, [interviewMode]);
+
+
   // Start VAD listening
   const startListening = useCallback(async () => {
     console.log('🎧 Attempting to start VAD listening...');
@@ -1087,24 +1210,26 @@ const AIVoiceInterviewPage: React.FC = () => {
   }, []);
   
   // Start recording (internal)
+// Start recording (internal) - AUDIO ONLY, video records continuously
   const startRecordingInternal = useCallback(() => {
     if (!mediaRecorderRef.current || isRecordingRef.current) {
       console.warn('Cannot start recording');
       return;
     }
     
-    console.log('Starting recording...');
+    console.log('Starting audio recording...');
     audioChunksRef.current = [];
-    videoChunksRef.current = [];
+    // REMOVED: videoChunksRef.current = []; - Don't clear video chunks!
     silenceStartRef.current = null;
     hasSpokenRef.current = true;
     
     try {
       mediaRecorderRef.current.start(100);
       
-      if (interviewMode === 'video' && videoRecorderRef.current) {
-        videoRecorderRef.current.start(100);
-      }
+      // REMOVED: Don't start video here - it's already recording continuously
+      // if (interviewMode === 'video' && videoRecorderRef.current) {
+      //   videoRecorderRef.current.start(100);
+      // }
       
       setIsRecording(true);
       isRecordingRef.current = true;
@@ -1122,18 +1247,20 @@ const AIVoiceInterviewPage: React.FC = () => {
       console.error('Failed to start recording:', err);
       setError('Failed to start recording. Please try again.');
     }
-  }, [interviewMode]);
-  
-  // Stop recording (internal)
+  }, []); // REMOVED interviewMode dependency
+    // Stop recording (internal)
+
+
   const stopRecordingInternal = useCallback(() => {
     if (!mediaRecorderRef.current || !isRecordingRef.current) return;
     
-    console.log('Stopping recording...');
+    console.log('Stopping audio recording...');
     
     try {
-      if (interviewMode === 'video' && videoRecorderRef.current && videoRecorderRef.current.state === 'recording') {
-        videoRecorderRef.current.stop();
-      }
+      // REMOVED: Don't stop video here - keep it running continuously
+      // if (interviewMode === 'video' && videoRecorderRef.current && videoRecorderRef.current.state === 'recording') {
+      //   videoRecorderRef.current.stop();
+      // }
       
       mediaRecorderRef.current.stop();
       
@@ -1150,8 +1277,8 @@ const AIVoiceInterviewPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to stop recording:', err);
     }
-  }, [interviewMode]);
-  
+  }, []); // REMOVED interviewMode dependency
+
   // Keep function refs in sync
   useEffect(() => {
     startRecordingInternalRef.current = startRecordingInternal;
@@ -1216,8 +1343,12 @@ const AIVoiceInterviewPage: React.FC = () => {
   }, [isPlaying, handsFreeMode, startListening]);
   
   // Play AI audio
+
+  // Play AI audio - FIXED: Connect AI audio to mixed stream for full recording
   const playAudio = useCallback((url: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      console.log('🔊 playAudio called with URL:', url);
+      
       stopListening();
       
       setInterviewState('speaking');
@@ -1226,55 +1357,126 @@ const AIVoiceInterviewPage: React.FC = () => {
       setCanRecord(false);
       setTurnState('ai');
       
-      const audio = new Audio(url);
-      audioPlayerRef.current = audio;
-      audio.muted = isMuted;
+      if (turnTransitionTimerRef.current) {
+        clearTimeout(turnTransitionTimerRef.current);
+        turnTransitionTimerRef.current = null;
+      }
       
-      audio.onended = () => {
-        console.log('AI audio ended');
+      const continueAfterAudio = () => {
+        console.log('✅ AI audio ended, transitioning to user turn');
         setIsPlaying(false);
         setAiSpeaking(false);
         setInterviewState('listening');
-        setTurnState('waiting');
+        setCanRecord(true);
+        setTurnState('user');
         
-        turnTransitionTimerRef.current = setTimeout(() => {
-          setCanRecord(true);
-          setTurnState('user');
-          
-          if (handsFreeMode) {
-            console.log('Auto-starting listening after AI finished');
+        if (handsFreeMode) {
+          turnTransitionTimerRef.current = setTimeout(() => {
+            console.log('🎧 Auto-starting listening after AI finished');
             startListening();
-          }
-        }, turnTransitionDelay);
+          }, turnTransitionDelay);
+        }
         
         resolve();
       };
       
-      audio.onerror = (e) => {
-        console.error('Audio playback error:', e);
-        setIsPlaying(false);
-        setAiSpeaking(false);
-        setCanRecord(true);
-        setTurnState('user');
-        setInterviewState('listening');
-        if (handsFreeMode) startListening();
-        reject(new Error('Audio playback failed'));
+      const audio = new Audio(url);
+      audioPlayerRef.current = audio;
+      audio.muted = isMuted;
+      audio.crossOrigin = "anonymous";
+      
+      // ============= CONNECT AI AUDIO TO MIXED STREAM =============
+      if (audioContextRef.current && mixedAudioDestinationRef.current) {
+        try {
+          // Disconnect previous AI audio source if exists
+          if (aiAudioSourceRef.current) {
+            aiAudioSourceRef.current.disconnect();
+          }
+          
+          // Create audio source from AI audio element
+          aiAudioSourceRef.current = audioContextRef.current.createMediaElementSource(audio);
+          
+          // Connect AI audio to mixed destination (for full interview recording)
+          aiAudioSourceRef.current.connect(mixedAudioDestinationRef.current);
+          
+          // Also connect to speakers so user can hear
+          aiAudioSourceRef.current.connect(audioContextRef.current.destination);
+          
+          console.log('✅ AI audio connected to mixed stream');
+        } catch (err) {
+          console.warn('Failed to connect AI audio to mixed stream:', err);
+        }
+      }
+      
+      audio.onended = () => {
+        console.log('🔊 Audio ended naturally');
+        continueAfterAudio();
       };
       
-      audio.play().catch((err) => {
-        console.error('Audio play failed:', err);
-        setIsPlaying(false);
-        setAiSpeaking(false);
-        setCanRecord(true);
-        setTurnState('user');
-        setInterviewState('listening');
-        if (handsFreeMode) startListening();
-        reject(err);
+      audio.onerror = (e) => {
+        console.error('❌ Audio error:', e);
+        continueAfterAudio();
+      };
+      
+      // NO TIMEOUT - Let audio play completely
+      // const timeoutFallback = setTimeout(() => {
+      //   console.log('⏰ Audio timeout fallback triggered');
+      //   if (audio && !audio.ended) {
+      //     audio.pause();
+      //   }
+      //   continueAfterAudio();
+      // }, 30000);
+      
+      // audio.addEventListener('ended', () => clearTimeout(timeoutFallback));
+      // audio.addEventListener('error', () => clearTimeout(timeoutFallback));
+      
+      // FIXED: Better autoplay handling
+      audio.play().then(() => {
+        console.log('🔊 AI audio started playing successfully');
+      }).catch((err) => {
+        console.error('❌ Audio play() failed:', err);
+        
+        // Show user prompt for audio permission
+        if (err.name === 'NotAllowedError') {
+          const enableBtn = document.createElement('button');
+          enableBtn.textContent = '🔊 Enable AI Voice';
+          enableBtn.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            background: #3b82f6; color: white; border: none;
+            padding: 12px 20px; border-radius: 8px; cursor: pointer;
+            font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          `;
+          
+          enableBtn.onclick = async () => {
+            try {
+              // Resume AudioContext if needed
+              if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+                await audioContextRef.current.resume();
+              }
+              
+              await audio.play();
+              enableBtn.remove();
+              console.log('✅ Audio enabled via user click');
+            } catch (retryErr) {
+              console.error('❌ Retry failed:', retryErr);
+              enableBtn.remove();
+              continueAfterAudio();
+            }
+          };
+          
+          document.body.appendChild(enableBtn);
+        } else {
+          continueAfterAudio();
+        }
       });
     });
   }, [isMuted, turnTransitionDelay, handsFreeMode, startListening, stopListening]);
-  
+
+
+
   // Handle mode selection and start interview
+
+
   const handleModeSelect = async (mode: InterviewMode) => {
     setInterviewMode(mode);
     setInterviewState('greeting');
@@ -1289,6 +1491,9 @@ const AIVoiceInterviewPage: React.FC = () => {
         return;
       }
       
+      // START FULL INTERVIEW RECORDING HERE
+      startFullInterviewRecording();
+      
       await startInterviewAPI();
       
     } catch (err: any) {
@@ -1297,7 +1502,8 @@ const AIVoiceInterviewPage: React.FC = () => {
       setInterviewState('error');
     }
   };
-  
+    
+
   // Start interview API call
   const startInterviewAPI = async () => {
     if (!accessToken) return;
@@ -1337,19 +1543,26 @@ const AIVoiceInterviewPage: React.FC = () => {
       
       if (data.greeting_audio_url) {
         try {
+          console.log('🔊 Playing greeting audio...');
           await playAudio(data.greeting_audio_url);
+          console.log('✅ Greeting finished, ready for user input');
         } catch (err) {
           console.warn('Greeting audio failed:', err);
           setCanRecord(true);
           setTurnState('user');
           setInterviewState('listening');
-          if (handsFreeMode) startListening();
+          if (handsFreeMode) {
+            setTimeout(() => startListening(), 500);
+          }
         }
       } else {
+        console.log('💬 No greeting audio, immediately ready for user input');
         setCanRecord(true);
         setTurnState('user');
         setInterviewState('listening');
-        if (handsFreeMode) startListening();
+        if (handsFreeMode) {
+          setTimeout(() => startListening(), 500);
+        }
       }
       
     } catch (err: any) {
@@ -1434,9 +1647,15 @@ const AIVoiceInterviewPage: React.FC = () => {
         if (completionData.audio_url) {
           try {
             await playAudio(completionData.audio_url);
+            // AUTO UPLOAD after AI finishes saying thank you
+            console.log('🎬 Interview completed, starting auto-upload...');
+            await handleAutoUpload();
           } catch (err) {
             console.warn('Completion audio failed:', err);
+            await handleAutoUpload(); // Upload even if audio fails
           }
+        } else {
+          await handleAutoUpload();
         }
         
         setInterviewState('completed');
@@ -1478,19 +1697,27 @@ const AIVoiceInterviewPage: React.FC = () => {
         
         if (processData.ai_audio_url) {
           try {
+            console.log('🔊 Playing AI response audio...');
             await playAudio(processData.ai_audio_url);
+            console.log('✅ AI audio finished, ready for next user input');
           } catch (err) {
             console.warn('AI audio failed:', err);
+            // Ensure we still transition to user turn even if audio fails
             setCanRecord(true);
             setTurnState('user');
             setInterviewState('listening');
-            if (handsFreeMode) startListening();
+            if (handsFreeMode) {
+              setTimeout(() => startListening(), 500);
+            }
           }
         } else {
+          console.log('💬 No AI audio, immediately transitioning to user turn');
           setCanRecord(true);
           setTurnState('user');
           setInterviewState('listening');
-          if (handsFreeMode) startListening();
+          if (handsFreeMode) {
+            setTimeout(() => startListening(), 500);
+          }
         }
       }
     } catch (err: any) {
@@ -1565,18 +1792,26 @@ const AIVoiceInterviewPage: React.FC = () => {
         
         if (data.ai_audio_url) {
           try {
+            console.log('🔊 Playing AI response audio (text response)...');
             await playAudio(data.ai_audio_url);
+            console.log('✅ AI audio finished, ready for next user input');
           } catch (err) {
+            console.warn('AI audio failed:', err);
             setCanRecord(true);
             setTurnState('user');
             setInterviewState('listening');
-            if (handsFreeMode) startListening();
+            if (handsFreeMode) {
+              setTimeout(() => startListening(), 500);
+            }
           }
         } else {
+          console.log('💬 No AI audio, immediately transitioning to user turn');
           setCanRecord(true);
           setTurnState('user');
           setInterviewState('listening');
-          if (handsFreeMode) startListening();
+          if (handsFreeMode) {
+            setTimeout(() => startListening(), 500);
+          }
         }
       }
     } catch (err) {
@@ -1606,27 +1841,183 @@ const AIVoiceInterviewPage: React.FC = () => {
     }
   };
   
-  // STOP Interview
+   /**
+   * Collect video blob from MediaRecorder
+   */
+  const collectVideoBlob = (): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      if (!videoRecorderRef.current || videoRecorderRef.current.state === 'inactive') {
+        if (videoChunksRef.current.length > 0) {
+          const blob = new Blob(videoChunksRef.current, { type: 'video/webm' });
+          console.log(`📹 Video blob from chunks: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+          resolve(blob);
+        } else {
+          resolve(null);
+        }
+        return;
+      }
+
+      videoRecorderRef.current.onstop = () => {
+        if (videoChunksRef.current.length > 0) {
+          const blob = new Blob(videoChunksRef.current, { type: 'video/webm' });
+          console.log(`📹 Video blob collected: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+          resolve(blob);
+        } else {
+          resolve(null);
+        }
+      };
+
+      try {
+        videoRecorderRef.current.stop();
+      } catch (err) {
+        console.error('Error stopping video recorder:', err);
+        if (videoChunksRef.current.length > 0) {
+          resolve(new Blob(videoChunksRef.current, { type: 'video/webm' }));
+        } else {
+          resolve(null);
+        }
+      }
+    });
+  };
+
+  /**
+   * Upload video blob to server
+   */
+  const uploadVideoBlob = async (videoBlob: Blob): Promise<boolean> => {
+    if (!accessToken || !videoBlob || videoBlob.size === 0) {
+      console.log('⚠️ No video to upload');
+      return false;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('video', videoBlob, `interview_${Date.now()}.webm`);
+      formData.append('video_type', 'full_interview');
+      formData.append('duration_seconds', String(totalRecordingTime));
+
+      console.log(`📤 Uploading video: ${(videoBlob.size / 1024 / 1024).toFixed(2)} MB`);
+
+      const response = await fetch(
+        `${api.getBaseUrl()}${endpoints.uploadVideo(accessToken)}`,
+        { method: 'POST', body: formData }
+      );
+
+      if (response.ok) {
+        console.log('✅ Video uploaded successfully');
+        return true;
+      } else {
+        console.error('❌ Video upload failed:', response.status);
+        return false;
+      }
+    } catch (err) {
+      console.error('❌ Video upload error:', err);
+      return false;
+    }
+  };
+
+  // STOP Interview - FIXED: uploads full interview recording
   const stopInterview = async () => {
     if (!accessToken) return;
     
-    console.log('Stopping interview completely...');
-    stopAllRecordings();
+    console.log('🛑 Stopping interview...');
+    
+    setShowLeaveConfirm(false);
+    setInterviewState('processing');
+    setCanRecord(false);
+    
+    // Stop playing audio
+    if (audioPlayerRef.current && isPlaying) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current.currentTime = 0;
+      setIsPlaying(false);
+      setAiSpeaking(false);
+    }
+    
+    // Stop listening
+    setIsListening(false);
+    isListeningRef.current = false;
+    
+    // Stop timer
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
     
     try {
-      await fetch(`${api.getBaseUrl()}${endpoints.stopInterview(accessToken)}`, { method: 'POST' });
+      // Stop individual audio recorder
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        console.log('🎤 Stopping individual audio recorder...');
+        setIsRecording(false);
+        isRecordingRef.current = false;
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (err) {
+          console.warn('Audio stop error:', err);
+        }
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      // Stop and collect full interview recording
+      console.log('📹 Collecting full interview recording...');
+      const fullInterviewBlob = await stopFullInterviewRecording();
+      
+      if (fullInterviewBlob && fullInterviewBlob.size > 1000) {
+        console.log(`📹 Full interview size: ${(fullInterviewBlob.size / 1024 / 1024).toFixed(2)} MB`);
+        
+        // Upload full interview
+        try {
+          const formData = new FormData();
+          const fileName = `full_interview_${Date.now()}.${interviewMode === 'video' ? 'webm' : 'webm'}`;
+          formData.append(interviewMode === 'video' ? 'video' : 'audio', fullInterviewBlob, fileName);
+          formData.append('recording_type', 'full_interview');
+          formData.append('duration_seconds', String(totalRecordingTime));
+          formData.append('mode', interviewMode);
+          
+          console.log(`📤 Uploading full interview: ${(fullInterviewBlob.size / 1024 / 1024).toFixed(2)} MB`);
+          
+          const uploadEndpoint = interviewMode === 'video' 
+            ? endpoints.uploadVideo(accessToken)
+            : endpoints.uploadVideo(accessToken); // Use video endpoint for both
+          
+          const response = await fetch(
+            `${api.getBaseUrl()}${uploadEndpoint}`,
+            { method: 'POST', body: formData }
+          );
+          
+          if (response.ok) {
+            console.log('✅ Full interview uploaded successfully');
+          } else {
+            console.error('❌ Full interview upload failed:', response.status);
+          }
+        } catch (uploadErr) {
+          console.error('❌ Full interview upload error:', uploadErr);
+        }
+      } else {
+        console.log('ℹ️ No full interview recording to upload');
+      }
+      
+      // Call stop API AFTER upload
+      console.log('📡 Calling stop API...');
+      const response = await fetch(
+        `${api.getBaseUrl()}${endpoints.stopInterview(accessToken)}`, 
+        { method: 'POST' }
+      );
+      
+      if (response.ok) {
+        console.log('✅ Interview stopped');
+      }
+      
       setInterviewState('stopped');
-      setCanRecord(false);
-      setShowLeaveConfirm(false);
       cleanupAudio();
+      
     } catch (err) {
-      console.error('Error stopping:', err);
+      console.error('❌ Error stopping:', err);
       setInterviewState('stopped');
-      setShowLeaveConfirm(false);
       cleanupAudio();
     }
   };
-  
+
+
   // RESUME Interview
   const resumeInterview = async () => {
     if (!accessToken) return;
@@ -2291,6 +2682,30 @@ const AIVoiceInterviewPage: React.FC = () => {
               
               {handsFreeMode && (
                 <>
+                  <div>
+                    <div className="font-medium mb-1 text-sm sm:text-base">Microphone Volume: {microphoneGain}x</div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      step="0.5"
+                      value={microphoneGain}
+                      onChange={(e) => {
+                        const newGain = parseFloat(e.target.value);
+                        setMicrophoneGain(newGain);
+                        // Update existing gain node if available
+                        if ((window as any).micGainNode) {
+                          (window as any).micGainNode.gain.value = newGain;
+                        }
+                      }}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>Normal (1x)</span>
+                      <span>Very Loud (5x)</span>
+                    </div>
+                  </div>
+                  
                   <div>
                     <div className="font-medium mb-1 text-sm sm:text-base">Voice Threshold: {voiceDetectionThreshold}</div>
                     <input

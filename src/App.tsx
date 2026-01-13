@@ -34,11 +34,11 @@ import { FieldResourceProfilePage, FieldResourceEditPage } from './features/fiel
 import { QuestionnairesPage, QuestionBankPage } from './features/questionnaires';
 import { InterviewDetailPage } from './features/interviews';
 import { 
-
   AISessionTemplatesPage 
 } from './features/ai-voice-interviews';
 
 import { OrganizationSettingsPage } from './features/settings';
+import { PDFAnalysisPage, PDFDocumentDetailPage } from './features';
 
 
 
@@ -116,6 +116,8 @@ const AppContent: React.FC = () => {
                 <Route path="/audio-analysis" element={<AudioAnalysisPage />} />
                 <Route path="/sentiment-analysis" element={<SentimentAnalysisPage />} />
                 <Route path="/upload-videos" element={<PrerecordedVideoUploadPage />} />
+                <Route path="/pdf-analysis" element={<PDFAnalysisPage />} />
+                <Route path="/pdf-analysis/:id" element={<PDFDocumentDetailPage />} />
                 
                 {/* Analytics & Settings */}
                 <Route path="/analytics" element={<AnalyticsPage />} />
