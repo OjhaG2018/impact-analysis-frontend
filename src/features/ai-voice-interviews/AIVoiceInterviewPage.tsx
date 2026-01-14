@@ -964,7 +964,7 @@ const AIVoiceInterviewPage: React.FC = () => {
           autoGainControl: false,   // DISABLED for speed
           sampleRate: 16000,        // REDUCED for speed
           channelCount: 1,          // MONO for speed
-          latency: 0.01,           // LOW latency
+          // latency: 0.01,           // LOW latency
         }
       });
       
